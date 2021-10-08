@@ -1,7 +1,9 @@
 # DSA5205_Quantitative_Finance_Investment_Project
 
-## Data Preparation 
+## 0.Data Preparation 
 
-## Stock Selection  
+## 1.Stock Selection  
 
-## Trading Strategy  
+## 2.Trading Strategy  
+
+## 3.Result Analysis
