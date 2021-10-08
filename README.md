@@ -1,1 +1,1 @@
-# dsa5205_investment_project
+# DSA5205_Quantitative_Finance_Investment_Project
