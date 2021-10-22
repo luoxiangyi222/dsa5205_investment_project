@@ -19,6 +19,7 @@ ALPHA_VANTAGE_API_KEY = '6OFO07W5FJ2R943U'
 # API documentation: https://polygon.io/docs/getting-started
 POLYGON_API_KEY = 'xKi2aeZYxFcpbe8xJXxwHlV7cj50AU6X'
 
+
 SELECTED_STOCK_TICKS = ['aapl', 'cost']
 
 ticker_objects = [yf.Ticker(s) for s in SELECTED_STOCK_TICKS]
@@ -52,7 +53,6 @@ def get_daily_price_data(ticker_list):
 
 get_daily_price_data(ticker_objects)
 
-breakpoint()
 
 
 # ################# Historical Technical Indicator Data #######################
@@ -67,7 +67,24 @@ def truncate_by_date(result_dict, ta_name, start='2019-12-31', end='2021-10-01')
     return date_ta_list
 
 
-def get_TA_features(stock_ticker, ta_function_list):
+def add_min_max_scaling(df, col_name):
+    df[col_name + '_min_max'] = (df[col_name] - df[col_name].min()) / (df[col_name].max() - df[col_name].min())
+    return df
+
+
+def add_fluctuation_percentage(df, col_name):
+    df[col_name + '_fluc_pctg'] = (df[col_name] - df[col_name].shift(periods=1, fill_value=0)) / df[col_name]
+    return df
+
+
+def add_polarize(df, col_name):
+    df[col_name + '_polarize'] = 0
+    df.loc[(df[col_name] > 0), col_name+'_polarize'] = 1
+    df.loc[(df[col_name] < 0), col_name + '_polarize'] = -1
+    return df
+
+
+def get_TA_features_with_extension(stock_ticker, ta_function_list):
     TA_df_list = []
 
     for ta in ta_function_list:
@@ -79,8 +96,11 @@ def get_TA_features(stock_ticker, ta_function_list):
             data = r.json()
             sma_list = truncate_by_date(data, 'SMA')
             sma_df = {'Date': [row[0] for row in sma_list],
-                      'SMA_10': [row[1]['SMA'] for row in sma_list]}
+                      'SMA_10': [float(row[1]['SMA']) for row in sma_list]}
+
             ta_df = pd.DataFrame(sma_df)
+            ta_df = add_min_max_scaling(ta_df, 'SMA_10')
+            ta_df = add_fluctuation_percentage(ta_df, 'SMA_10')
 
         elif ta == 'MACD':
             url = f'https://www.alphavantage.co/query?function=MACD&symbol={stock_ticker}' \
@@ -93,9 +113,11 @@ def get_TA_features(stock_ticker, ta_function_list):
 
             macd_components = ['MACD', 'MACD_Signal', 'MACD_Hist']
             for c in macd_components:
-                macd_df[c] = [row[1][c] for row in macd_list]
+                macd_df[c] = [float(row[1][c]) for row in macd_list]
 
             ta_df = pd.DataFrame(macd_df)
+            for c in macd_components:
+                ta_df = add_polarize(ta_df, c)
 
         elif ta == 'CCI':  # CCI 20
             url = f'https://www.alphavantage.co/query?function=CCI&symbol={stock_ticker}' \
@@ -104,8 +126,19 @@ def get_TA_features(stock_ticker, ta_function_list):
             data = r.json()
             cci_list = truncate_by_date(data, 'CCI')
             cci_df = {'Date': [row[0] for row in cci_list],
-                      'CCI_20': [row[1]['CCI'] for row in cci_list]}
+                      'CCI_20': [float(row[1]['CCI']) for row in cci_list]}
             ta_df = pd.DataFrame(cci_df)
+
+            # polarize
+            ta_df['CCI_20_polarize'] = 0
+            ta_df.loc[(ta_df['CCI_20'] > 100), 'CCI_20_polarize'] = -1
+            ta_df.loc[(ta_df['CCI_20'] < -100), 'CCI_20_polarize'] = 1
+
+            # fluctuation percentage
+            ta_df = add_fluctuation_percentage(ta_df, 'CCI_20')
+
+            print(ta_df)
+            breakpoint()
 
         elif ta == 'ROC':  # ROC 10
             url = f'https://www.alphavantage.co/query?function=ROC&symbol={stock_ticker}' \
@@ -199,7 +232,7 @@ def get_TA_features(stock_ticker, ta_function_list):
         TA_df_list.append(ta_df)
 
         # Alpha Vantage limits 5 request per minutes
-        time.sleep(20)
+        time.sleep(15)
 
     # merge all technical indicators
     all_TA_df = reduce(lambda left, right: pd.merge(left, right, on='Date'), TA_df_list)
@@ -214,9 +247,15 @@ def get_TA_features(stock_ticker, ta_function_list):
     return all_TA_df
 
 
-ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
+# ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
+ta_list = ['CCI']
+get_TA_features_with_extension('aapl', ta_list)
 
-get_TA_features('aapl', ta_list)
+
+# def get_TA_extension(stock_ticker):
+#     ta_df = pd.read_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_TA_indicators.csv')
+#     ta_extension_df = {}
+#     col_names = ta_df.columns
 
 
 # ##### Macro #####
