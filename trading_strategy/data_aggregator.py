@@ -7,7 +7,17 @@ us_case_df = pd.read_csv('../trading_strategy_data/us_covid_19_data/us_daily_cas
 us_death_df = pd.read_csv('../trading_strategy_data/us_covid_19_data/us_daily_death_trends.csv')
 us_vaccination_df = pd.read_csv('../trading_strategy_data/us_covid_19_data/us_vaccinations_trends.csv')
 
-# change date time format
+# Change date format
+us_case_df['Date'] = pd.to_datetime(us_case_df.Date)
+us_death_df['Date'] = pd.to_datetime(us_death_df.Date)
+us_vaccination_df['Date'] = pd.to_datetime(us_vaccination_df.Date)
+
+
+def weekly_to_daily(date_df, weekly_df):
+    daily_df = pd.merge(date_df, weekly_df, how='left', left_on='Date', right_on='Week')
+    print(daily_df.head())
+    breakpoint()
+    return daily_df
 
 
 def aggregate_data(stock_ticker):
@@ -23,13 +33,19 @@ def aggregate_data(stock_ticker):
     # ###### TA ######
     TA_df = pd.read_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_TA_indicators.csv')
 
+    ticker_date_df = TA_df[['Ticker', 'Date']].copy()
+
     # ###### Investor Attention ######
+    # change weekly data to daily data
     worldwide_trend_df = pd.read_csv(
         f'../trading_strategy_data/google_trend_data/{stock_ticker}_worldwide_google_trend.csv')
+
+    worldwide_trend_df['Week']
+
+    worldwide_trend_df = weekly_to_daily(ticker_date_df, worldwide_trend_df)
+
     finance_trend_df = pd.read_csv(
         f'../trading_strategy_data/google_trend_data/{stock_ticker}_finance_google_trend.csv')
-
-
 
     return price_df
 

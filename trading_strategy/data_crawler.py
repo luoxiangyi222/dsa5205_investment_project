@@ -1,12 +1,14 @@
-import yfinance as yf
-
-import pandas as pd
-import requests
 from datetime import date
 from functools import reduce
-
-import time
 import json
+import pandas as pd
+from pytrends.request import TrendReq
+import requests
+import time
+import yfinance as yf
+
+pytrends = TrendReq(hl='en-US', tz=360)
+
 
 pd.set_option('display.max_columns', None)  # enable to see all columns
 # pd.set_option('display.max_rows', None)  # enable to see all columns
@@ -280,10 +282,8 @@ def prepare_data():
     get_TA_features_with_extension('aapl', ta_list)
 
 
-# ##### Macro #####
 
-# ################# Historical Investor Attention Data #######################
-# get from google trend website
 
-# ################# Historical Pandemic Data #######################
-# get from CDC website
+
+
+
