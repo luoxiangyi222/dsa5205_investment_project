@@ -34,8 +34,6 @@ def get_stock_info(ticker_list):
             json.dump(t.info, fp)
 
 
-get_stock_info(ticker_objects)
-
 # ################# Historical Price Data #######################
 # Open, High, Low, Volume, Dividends, Stock Splits
 
@@ -49,9 +47,6 @@ def get_daily_price_data(ticker_list):
 
         # save as csv
         current_t_history.to_csv(f'../trading_strategy_data/selected_stocks_data/{SELECTED_STOCK_TICKS[i]}_price_data.csv')
-
-
-get_daily_price_data(ticker_objects)
 
 
 
@@ -137,9 +132,6 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
             # fluctuation percentage
             ta_df = add_fluctuation_percentage(ta_df, 'CCI_20')
 
-            print(ta_df)
-            breakpoint()
-
         elif ta == 'ROC':  # ROC 10
             url = f'https://www.alphavantage.co/query?function=ROC&symbol={stock_ticker}' \
                   f'&interval=daily&time_period=20&series_type=close&apikey={ALPHA_VANTAGE_API_KEY}'
@@ -147,8 +139,11 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
             data = r.json()
             roc_list = truncate_by_date(data, 'ROC')
             roc_df = {'Date': [row[0] for row in roc_list],
-                      'ROC_10': [row[1]['ROC'] for row in roc_list]}
+                      'ROC_10': [float(row[1]['ROC']) for row in roc_list]}
             ta_df = pd.DataFrame(roc_df)
+
+            ta_df = add_polarize(ta_df, 'ROC_10')
+            ta_df = add_fluctuation_percentage(ta_df, 'ROC_10')
 
         elif ta == 'RSI':  # RSI 5
             url = f'https://www.alphavantage.co/query?function=RSI&symbol={stock_ticker}' \
@@ -157,8 +152,15 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
             data = r.json()
             rsi_list = truncate_by_date(data, 'RSI')
             rsi_df = {'Date': [row[0] for row in rsi_list],
-                      'RSI_5': [row[1]['RSI'] for row in rsi_list]}
+                      'RSI_5': [float(row[1]['RSI']) for row in rsi_list]}
             ta_df = pd.DataFrame(rsi_df)
+
+            # polarize
+            ta_df['RSI_5_polarize'] = 0
+            ta_df.loc[(ta_df['RSI_5'] > 70), 'RSI_5_polarize'] = -1
+            ta_df.loc[(ta_df['RSI_5'] < 30), 'RSI_5_polarize'] = 1
+
+            ta_df = add_fluctuation_percentage(ta_df, 'RSI_5')
 
         elif ta == 'ADOSC':
             url = f'https://www.alphavantage.co/query?function=ADOSC&symbol={stock_ticker}' \
@@ -178,9 +180,14 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
 
             stoch_list = truncate_by_date(data, 'STOCH')
             stoch_df = {'Date': [row[0] for row in stoch_list],
-                        'STOCH_SlowD': [row[1]['SlowD'] for row in stoch_list],
-                        'STOCH_SlowK': [row[1]['SlowK'] for row in stoch_list]}
+                        'STOCH_SlowD': [float(row[1]['SlowD']) for row in stoch_list],
+                        'STOCH_SlowK': [float(row[1]['SlowK']) for row in stoch_list]}
             ta_df = pd.DataFrame(stoch_df)
+
+            ta_df = add_min_max_scaling(ta_df, 'STOCH_SlowD')
+            ta_df = add_fluctuation_percentage(ta_df, 'STOCH_SlowD')
+            ta_df = add_min_max_scaling(ta_df, 'STOCH_SlowK')
+            ta_df = add_fluctuation_percentage(ta_df, 'STOCH_SlowK')
 
         elif ta == 'ADX':
             url = f'https://www.alphavantage.co/query?function=ADX&symbol={stock_ticker}' \
@@ -190,8 +197,10 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
 
             adx_list = truncate_by_date(data, 'ADX')
             adx_df = {'Date': [row[0] for row in adx_list],
-                      'ADX': [row[1]['ADX'] for row in adx_list]}
+                      'ADX': [float(row[1]['ADX']) for row in adx_list]}
             ta_df = pd.DataFrame(adx_df)
+
+            ta_df = add_fluctuation_percentage(ta_df, 'ADX')
 
         elif ta == 'AROON':
             url = f'https://www.alphavantage.co/query?function=AROON&symbol={stock_ticker}' \
@@ -201,9 +210,17 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
 
             aroon_list = truncate_by_date(data, 'AROON')
             aroon_df = {'Date': [row[0] for row in aroon_list],
-                        'AROON_Up': [row[1]['Aroon Up'] for row in aroon_list],
-                        'AROON_Down': [row[1]['Aroon Down'] for row in aroon_list]}
+                        'AROON_Up': [float(row[1]['Aroon Up']) for row in aroon_list],
+                        'AROON_Down': [float(row[1]['Aroon Down']) for row in aroon_list]}
             ta_df = pd.DataFrame(aroon_df)
+
+            ta_df = add_min_max_scaling(ta_df, 'AROON_Up')
+            ta_df = add_min_max_scaling(ta_df, 'AROON_Down')
+
+            # polarize
+            ta_df['AROON_polarize'] = 0
+            ta_df.loc[(ta_df['AROON_Up'] - ta_df['AROON_Down'] > 0), 'AROON_polarize'] = 1
+            ta_df.loc[(ta_df['AROON_Up'] - ta_df['AROON_Down'] < 0), 'AROON_polarize'] = -1
 
         elif ta == 'BBANDS':
             url = f'https://www.alphavantage.co/query?function=BBANDS&symbol={stock_ticker}' \
@@ -213,11 +230,14 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
 
             bbands_list = truncate_by_date(data, 'BBANDS')
             bbands_df = {'Date': [row[0] for row in bbands_list],
-                         'BBANDS_Lower_Band': [row[1]['Real Lower Band'] for row in bbands_list],
-                         'BBANDS_Middle_Band': [row[1]['Real Middle Band'] for row in bbands_list],
-                         'BBANDS_Upper_Band': [row[1]['Real Upper Band'] for row in bbands_list]}
+                         'BBANDS_Lower_Band': [float(row[1]['Real Lower Band']) for row in bbands_list],
+                         'BBANDS_Middle_Band': [float(row[1]['Real Middle Band']) for row in bbands_list],
+                         'BBANDS_Upper_Band': [float(row[1]['Real Upper Band']) for row in bbands_list]}
 
             ta_df = pd.DataFrame(bbands_df)
+
+            # band width
+            ta_df['BBANDS_width'] = ta_df['BBANDS_Upper_Band'] - ta_df['BBANDS_Lower_Band']
 
         elif ta == 'AD':
             url = f'https://www.alphavantage.co/query?function=AD&symbol={stock_ticker}' \
@@ -226,8 +246,10 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
             data = r.json()
             ad_list = truncate_by_date(data, 'Chaikin A/D')
             ad_df = {'Date': [row[0] for row in ad_list],
-                     'Chaikin A/D': [row[1]['Chaikin A/D'] for row in ad_list]}
+                     'Chaikin_AD': [float(row[1]['Chaikin A/D']) for row in ad_list]}
             ta_df = pd.DataFrame(ad_df)
+
+            ta_df = add_fluctuation_percentage(ta_df, 'Chaikin_AD')
 
         TA_df_list.append(ta_df)
 
@@ -247,15 +269,15 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
     return all_TA_df
 
 
-# ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
-ta_list = ['CCI']
-get_TA_features_with_extension('aapl', ta_list)
+def prepare_data():
+    get_stock_info(ticker_objects)
 
+    # price data
+    get_daily_price_data(ticker_objects)
 
-# def get_TA_extension(stock_ticker):
-#     ta_df = pd.read_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_TA_indicators.csv')
-#     ta_extension_df = {}
-#     col_names = ta_df.columns
+    # TA data
+    ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
+    get_TA_features_with_extension('aapl', ta_list)
 
 
 # ##### Macro #####
