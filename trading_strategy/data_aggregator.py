@@ -1,5 +1,5 @@
 import pandas as pd
-
+import datetime
 import trading_strategy.data_crawler as crawler
 
 # Covid 19 data
@@ -14,9 +14,15 @@ us_vaccination_df['Date'] = pd.to_datetime(us_vaccination_df.Date)
 
 
 def weekly_to_daily(date_df, weekly_df):
+    weekly_df['Week'] = pd.to_datetime(weekly_df['Week'])
+    # offset forward one day, make it from Sunday to Monday
+    weekly_df['Week'] = weekly_df['Week'] + datetime.timedelta(days=1)
+
+    date_df['Date'] = pd.to_datetime(date_df['Date'])
     daily_df = pd.merge(date_df, weekly_df, how='left', left_on='Date', right_on='Week')
-    print(daily_df.head())
-    breakpoint()
+
+    # TODO: fill daily data according to last week data
+
     return daily_df
 
 
@@ -39,8 +45,6 @@ def aggregate_data(stock_ticker):
     # change weekly data to daily data
     worldwide_trend_df = pd.read_csv(
         f'../trading_strategy_data/google_trend_data/{stock_ticker}_worldwide_google_trend.csv')
-
-    worldwide_trend_df['Week']
 
     worldwide_trend_df = weekly_to_daily(ticker_date_df, worldwide_trend_df)
 
