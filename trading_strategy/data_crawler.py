@@ -2,18 +2,22 @@ from datetime import date
 from functools import reduce
 import json
 import pandas as pd
-from pytrends.request import TrendReq
+from pytrends import dailydata
 import requests
 import time
 import yfinance as yf
 
-START_DATE = date.fromisoformat('2019-12-01')
-END_DATE = date.fromisoformat('2021-10-15')
 
-pytrends = TrendReq(hl='en-US', tz=360)
-
+# pandas setting
 pd.set_option('display.max_columns', None)  # enable to see all columns
-# pd.set_option('display.max_rows', None)  # enable to see all rows
+pd.set_option('display.max_rows', None)  # enable to see all rows
+
+START_DATE_STR = '2019-12-01'
+END_DATE_STR = '2021-10-15'
+
+START_DATE = date.fromisoformat(START_DATE_STR)
+END_DATE = date.fromisoformat(END_DATE_STR)
+
 
 # ################# API keys #############################
 # Get Technical Analysis indicators
@@ -23,8 +27,8 @@ ALPHA_VANTAGE_API_KEY = '6OFO07W5FJ2R943U'
 # API documentation: https://polygon.io/docs/getting-started
 POLYGON_API_KEY = 'xKi2aeZYxFcpbe8xJXxwHlV7cj50AU6X'
 
-
-SELECTED_STOCKS = ['aapl', 'cost']
+# TODO: need update based on stock selection results
+SELECTED_STOCKS = ['AAPL', 'COST']
 
 ticker_objects = [yf.Ticker(s) for s in SELECTED_STOCKS]
 
@@ -36,7 +40,7 @@ def get_stock_info(ticker_list):
     for i, t in enumerate(ticker_list):
         with open(f'../trading_strategy_data/selected_stocks_data/{SELECTED_STOCKS[i]}_info.json', 'w') as fp:
             json.dump(t.info, fp)
-
+            print(f'========== {SELECTED_STOCKS[i]} company info saved! ==========')
 
 # ################# Historical Price Data #######################
 # Open, High, Low, Volume, Dividends, Stock Splits
@@ -46,11 +50,13 @@ def get_daily_price_data(ticker_list):
 
     for i, t in enumerate(ticker_list):
         current_t_history = t.history(period='1d',
-                                      start="2019-12-31",
-                                      end="2021-10-01")
+                                      start=START_DATE_STR,
+                                      end=END_DATE_STR)
 
         # save as csv
-        current_t_history.to_csv(f'../trading_strategy_data/selected_stocks_data/{SELECTED_STOCKS[i]}_price_data.csv')
+        current_t_history.to_csv(f'../trading_strategy_data/selected_stocks_data/'
+                                 f'{SELECTED_STOCKS[i]}_daily_price_data.csv')
+        print(f'========== {SELECTED_STOCKS[i]} daily price saved! ==========')
 
 
 # ################# Historical Technical Indicator Data #######################
@@ -59,11 +65,6 @@ def get_daily_price_data(ticker_list):
 def truncate_by_date(result_dict, ta_name, start=START_DATE, end=END_DATE):
     """
     Only keep the required timeframe.
-    :param result_dict: request result by API
-    :param ta_name: TA indicator name
-    :param start: timeframe start date
-    :param end: timeframe end date
-    :return: list of pair (date, TA value)
     """
 
     result_dict = result_dict[f'Technical Analysis: {ta_name}']
@@ -286,59 +287,47 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
     # Save TA dataframe
     all_TA_df.to_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_TA_indicators.csv')
 
-    print(f'========== {stock_ticker} TA indicators saved.')
+    print(f'========== {stock_ticker} TA indicators saved. ==========')
     return all_TA_df
 
 
-def get_google_trend_data(ticker, kw, cat=0, start=START_DATE, end=END_DATE):
+def get_google_trend_data(ticker, keyword, start=START_DATE, end=END_DATE):
 
-    hourly_df = pytrends.get_historical_interest([kw],
-                                                 year_start=start.year, month_start=start.month, day_start=start.day,
-                                                 hour_start=0,
-                                                 year_end=end.year, month_end=end.month, day_end=end.day, hour_end=0,
-                                                 cat=cat,
-                                                 geo='',
-                                                 gprop='',
-                                                 sleep=10)
-    # TODO resample hourly to daily
-    print(hourly_df)
-    print(hourly_df.dtypes)
-    breakpoint()
-    daily_df = None
+    daily_df = dailydata.get_daily_data(word=keyword,
+                                        start_year=start.year, start_mon=start.month,
+                                        stop_year=end.year, stop_mon=end.month,
+                                        geo=''
+                                        )
+    daily_df = daily_df.reset_index()
+    daily_df = daily_df.iloc[:, 0:2]
+    daily_df.columns = ['Date', f'{ticker}_daily_trend']
+
+    daily_df.to_csv(f'../trading_strategy_data/google_trend_data/{ticker}_daily_trend.csv')
+    print(f'========== {ticker} daily google search volume index saved! ==========')
     return daily_df
 
 
 if __name__ == "__main__":
 
-    # # basic company information
-    # get_stock_info(ticker_objects)
-    #
-    # # price data
-    # get_daily_price_data(ticker_objects)
-    #
-    # # TA data
-    # ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
-    # for ticker in SELECTED_STOCKS:
-    #     get_TA_features_with_extension(ticker, ta_list)
+    # basic company information
+    get_stock_info(ticker_objects)
 
+    # price data
+    get_daily_price_data(ticker_objects)
+
+    # TA data
+    ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
+    for ticker in SELECTED_STOCKS:
+        get_TA_features_with_extension(ticker, ta_list)
+
+    # Google daily trend volume index data
     stock_list = SELECTED_STOCKS
+    # TODO need update keywords for selected ten stocks
     kw_list = ['Apple', 'Costco']
-    stock_kw_dict = dict(zip(stock_list, kw_list))
+    N = len(stock_list)
 
-    # google hourly search data
-    pytrend = TrendReq(hl='en-US', tz=360)
+    for i in range(N):
+        all_cat_trend_df = get_google_trend_data(stock_list[i], kw_list[i])
 
-    for ticker, kw in stock_kw_dict.items():
-
-        all_cat_trend_df = get_google_trend_data(ticker, kw, cat=0)
-
-        # cat = 7 for finance category
-        # reference: https://github.com/pat310/google-trends-api/wiki/Google-Trends-Categories
-        fin_trend_df = get_google_trend_data(ticker, kw, cat=7)
-
-
-
-
-
-
+    print('=====++++++++++ Data Crawling finished ++++++++++======')
 

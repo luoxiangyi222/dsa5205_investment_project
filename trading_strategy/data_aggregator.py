@@ -68,5 +68,6 @@ def aggregate_data(stock_ticker):
     return all_TA_df
 
 
-aggregate_df = aggregate_data('aapl')
-print(aggregate_df.head())
+if __name__ == "__main__":
+    aggregate_df = aggregate_data('aapl')
+    print(aggregate_df.head())
