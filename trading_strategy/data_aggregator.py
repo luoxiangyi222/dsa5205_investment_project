@@ -7,7 +7,7 @@ This module combines data from different sources into one dataframe.
 """
 
 import pandas as pd
-import datetime
+import numpy as np
 import trading_strategy.data_crawler as crawler
 from functools import reduce
 
@@ -19,7 +19,9 @@ def get_pandemic_data():
 
     # Covid 19 data
     us_case_df = pd.read_csv('../trading_strategy_data/us_covid_19_data/us_daily_case_trends.csv')
+    us_case_df = us_case_df.drop(columns=['State'])
     us_death_df = pd.read_csv('../trading_strategy_data/us_covid_19_data/us_daily_death_trends.csv')
+    us_death_df = us_death_df.drop(columns=['State'])
     # us_vaccination_df = pd.read_csv('../trading_strategy_data/us_covid_19_data/us_vaccinations_trends.csv')
 
     # Change date format
@@ -56,6 +58,15 @@ def aggregate_data(stock_ticker):
     df_list = [TA_df, price_df, trend_df]
     df_list.extend(get_pandemic_data())
     combined_df = reduce(lambda left, right: pd.merge(left, right, how='left', on='Date', validate='one_to_many'), df_list)
+
+    # insert BBANDS extension based on Upper/Lower Bands and High/Low price
+    new_col = np.zeros((combined_df.shape[0], 1))
+    new_col[(combined_df['High'] > combined_df['BBANDS_Upper_Band'])] = -1
+    new_col[(combined_df['Low'] < combined_df['BBANDS_Lower_Band'])] = 1
+
+    combined_df.insert(37, "BBANDS_compare_high_low_price", new_col)
+    # round to 8 dp
+    combined_df = combined_df.round(8)
 
     combined_df.to_csv(f'../trading_strategy_data/combined_data/{stock_ticker}_combined_data.csv', index=False)
 

@@ -2,14 +2,14 @@
 
 ## 0.Data Preparation 
 
-0.1 Data resources
+### 0.1 Data resources
 
 - **price data**: yahoo finance free `yfinance` API
 - **technical indicators**: alpha vantage free API
 - **google daily search volume index**: google trend website, `pytrends` API
 - **US covid-19 data**: CDC data tracker website
 
-0.2 Technical Indicator Extension  
+### 0.2 Technical Indicator Extension  
 
 Existing works have shown that extract new feature from commonly used technical indicators based on financial domain knowledge will benefit the prediction models when combining with proper feature engineering.  
 
