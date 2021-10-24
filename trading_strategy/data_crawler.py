@@ -1,3 +1,11 @@
+"""
+Author: Luo Xiangyi
+Create on: 2021-10-23
+
+This module crawls data from different sources and save them locally.
+"""
+
+
 from datetime import date
 from functools import reduce
 import json
@@ -285,7 +293,7 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
     all_TA_df = pd.concat([ticker_column, all_TA_df], axis=1)
 
     # Save TA dataframe
-    all_TA_df.to_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_TA_indicators.csv')
+    all_TA_df.to_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_TA_indicators.csv', index=False)
 
     print(f'========== {stock_ticker} TA indicators saved. ==========')
     return all_TA_df
@@ -302,7 +310,7 @@ def get_google_trend_data(ticker, keyword, start=START_DATE, end=END_DATE):
     daily_df = daily_df.iloc[:, 0:2]
     daily_df.columns = ['Date', f'{ticker}_daily_trend']
 
-    daily_df.to_csv(f'../trading_strategy_data/google_trend_data/{ticker}_daily_trend.csv')
+    daily_df.to_csv(f'../trading_strategy_data/google_trend_data/{ticker}_daily_trend.csv', index=False)
     print(f'========== {ticker} daily google search volume index saved! ==========')
     return daily_df
 
