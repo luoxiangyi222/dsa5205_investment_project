@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import trading_strategy.data_crawler as crawler
 from functools import reduce
+from datetime import date
 
 pd.set_option('display.max_columns', None)  # enable to see all columns
 pd.set_option('display.max_rows', None)  # enable to see all columns
@@ -30,6 +31,12 @@ def get_pandemic_data():
     # us_vaccination_df['Date'] = pd.to_datetime(us_vaccination_df.Date)
 
     return [us_case_df, us_death_df]
+
+
+def labelling_prices(df, lag: int):
+    df[f'price_{lag}_days_later'] = df['Close'].shift(periods=-lag)
+    return df
+
 
 
 def aggregate_data(stock_ticker):
@@ -63,10 +70,17 @@ def aggregate_data(stock_ticker):
     new_col = np.zeros((combined_df.shape[0], 1))
     new_col[(combined_df['High'] > combined_df['BBANDS_Upper_Band'])] = -1
     new_col[(combined_df['Low'] < combined_df['BBANDS_Lower_Band'])] = 1
-
     combined_df.insert(37, "BBANDS_compare_high_low_price", new_col)
+
     # round to 8 dp
     combined_df = combined_df.round(8)
+
+    # truncate data having no covid-19 data
+    covid_start_date = '2020-01-24'
+    validation_period_stop_date = '2021-10-01'
+
+    # combined_df = combined_df[combined_df.Date > covid_start_date]
+    combined_df = combined_df[~((combined_df['Date'] < covid_start_date) | (combined_df['Date'] > validation_period_stop_date))]
 
     combined_df.to_csv(f'../trading_strategy_data/combined_data/{stock_ticker}_combined_data.csv', index=False)
     print(f'Shape of combined dataframe: {combined_df.shape}')
