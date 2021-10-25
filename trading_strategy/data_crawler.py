@@ -36,9 +36,11 @@ ALPHA_VANTAGE_API_KEY = '6OFO07W5FJ2R943U'
 POLYGON_API_KEY = 'xKi2aeZYxFcpbe8xJXxwHlV7cj50AU6X'
 
 # TODO: need update based on stock selection results
-SELECTED_STOCKS = ['AAPL', 'COST']
+PORTFOLIO = []
 
-ticker_objects = [yf.Ticker(s) for s in SELECTED_STOCKS]
+RANDOM_SELECTED_STOCKS = ['AAPL', 'COST']
+
+ticker_objects = [yf.Ticker(s) for s in RANDOM_SELECTED_STOCKS]
 
 
 # ##### company basic information #####
@@ -46,9 +48,9 @@ ticker_objects = [yf.Ticker(s) for s in SELECTED_STOCKS]
 
 def get_stock_info(ticker_list):
     for i, t in enumerate(ticker_list):
-        with open(f'../trading_strategy_data/selected_stocks_data/{SELECTED_STOCKS[i]}_info.json', 'w') as fp:
+        with open(f'../trading_strategy_data/selected_stocks_data/{RANDOM_SELECTED_STOCKS[i]}_info.json', 'w') as fp:
             json.dump(t.info, fp)
-            print(f'========== {SELECTED_STOCKS[i]} company info saved! ==========')
+            print(f'========== {RANDOM_SELECTED_STOCKS[i]} company info saved! ==========')
 
 # ################# Historical Price Data #######################
 # Open, High, Low, Volume, Dividends, Stock Splits
@@ -63,8 +65,8 @@ def get_daily_price_data(ticker_list):
 
         # save as csv
         current_t_history.to_csv(f'../trading_strategy_data/selected_stocks_data/'
-                                 f'{SELECTED_STOCKS[i]}_daily_price_data.csv')
-        print(f'========== {SELECTED_STOCKS[i]} daily price saved! ==========')
+                                 f'{RANDOM_SELECTED_STOCKS[i]}_daily_price_data.csv')
+        print(f'========== {RANDOM_SELECTED_STOCKS[i]} daily price saved! ==========')
 
 
 # ################# Historical Technical Indicator Data #######################
@@ -90,7 +92,7 @@ def add_min_max_scaling(df, col_name):
 
 
 def add_fluctuation_percentage(df, col_name):
-    df[col_name + '_fluc_pctg'] = (df[col_name] - df[col_name].shift(periods=1, fill_value=0)) / df[col_name]
+    df[col_name + '_fluc_pctg'] = (df[col_name] - df[col_name].shift(periods=1)) / df[col_name].shift(periods=1)
     return df
 
 
@@ -325,11 +327,11 @@ if __name__ == "__main__":
 
     # TA data
     ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
-    for ticker in SELECTED_STOCKS:
+    for ticker in RANDOM_SELECTED_STOCKS:
         get_TA_features_with_extension(ticker, ta_list)
 
     # Google daily trend volume index data
-    stock_list = SELECTED_STOCKS
+    stock_list = RANDOM_SELECTED_STOCKS
     # TODO need update keywords for selected ten stocks
     kw_list = ['Apple', 'Costco']
     N = len(stock_list)

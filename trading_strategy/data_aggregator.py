@@ -39,8 +39,8 @@ def aggregate_data(stock_ticker):
     price_df['Date'] = pd.to_datetime(price_df['Date'])
 
     # add price change and change percentage features
-    price_df['Close_Change'] = price_df['Close'] - price_df['Close'].shift(periods=1, fill_value=0)
-    price_df['Close_Change_pctg'] = price_df['Close_Change'] / price_df['Close'].shift(periods=1, fill_value=price_df['Close'][0])
+    price_df['Close_Change'] = price_df['Close'] - price_df['Close'].shift(periods=1)
+    price_df['Close_Change_pctg'] = price_df['Close_Change'] / price_df['Close'].shift(periods=1)
 
     # min_max scaling for volume
     price_df = crawler.add_min_max_scaling(price_df, 'Volume')
@@ -69,14 +69,14 @@ def aggregate_data(stock_ticker):
     combined_df = combined_df.round(8)
 
     combined_df.to_csv(f'../trading_strategy_data/combined_data/{stock_ticker}_combined_data.csv', index=False)
-
+    print(f'Shape of combined dataframe: {combined_df.shape}')
     print(f'========== {stock_ticker} combined data saved! ==========')
     return combined_df
 
 
 if __name__ == "__main__":
 
-    for stock in crawler.SELECTED_STOCKS:
+    for stock in crawler.RANDOM_SELECTED_STOCKS:
         aggregate_df = aggregate_data(stock)
 
 
