@@ -23,7 +23,6 @@ def get_pandemic_data():
     us_case_df = us_case_df.drop(columns=['State'])
     us_death_df = pd.read_csv('../trading_strategy_data/us_covid_19_data/us_daily_death_trends.csv')
     us_death_df = us_death_df.drop(columns=['State'])
-    # us_vaccination_df = pd.read_csv('../trading_strategy_data/us_covid_19_data/us_vaccinations_trends.csv')
 
     # Change date format
     us_case_df['Date'] = pd.to_datetime(us_case_df.Date)
@@ -33,16 +32,10 @@ def get_pandemic_data():
     return [us_case_df, us_death_df]
 
 
-def labelling_prices(df, lag: int):
-    df[f'price_{lag}_days_later'] = df['Close'].shift(periods=-lag)
-    return df
-
-
-
-def aggregate_data(stock_ticker):
+def aggregate_data(stock_ticker, folder_name='random_stocks_data'):
 
     # ###### load daily price data ######
-    price_df = pd.read_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_daily_price_data.csv')
+    price_df = pd.read_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_daily_price_data.csv')
     price_df['Date'] = pd.to_datetime(price_df['Date'])
 
     # add price change and change percentage features
@@ -53,12 +46,12 @@ def aggregate_data(stock_ticker):
     price_df = crawler.add_min_max_scaling(price_df, 'Volume')
 
     # ###### load daily TA data ######
-    TA_df = pd.read_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_TA_indicators.csv')
+    TA_df = pd.read_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_TA_indicators.csv')
     TA_df['Date'] = pd.to_datetime(TA_df['Date'])
 
     # ###### load daily Google Trend data ######
     trend_df = pd.read_csv(
-        f'../trading_strategy_data/google_trend_data/{stock_ticker}_daily_trend.csv')
+        f'../trading_strategy_data/{folder_name}/{stock_ticker}_daily_trend.csv')
     trend_df['Date'] = pd.to_datetime(trend_df['Date'])
 
     # merge all data together based on time
@@ -80,9 +73,11 @@ def aggregate_data(stock_ticker):
     validation_period_stop_date = '2021-10-01'
 
     # combined_df = combined_df[combined_df.Date > covid_start_date]
-    combined_df = combined_df[~((combined_df['Date'] < covid_start_date) | (combined_df['Date'] > validation_period_stop_date))]
+    combined_df = combined_df[~((combined_df['Date'] < covid_start_date) |
+                                (combined_df['Date'] > validation_period_stop_date))]
 
-    combined_df.to_csv(f'../trading_strategy_data/combined_data/{stock_ticker}_combined_data.csv', index=False)
+    combined_df.to_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_combined_data.csv', index=False)
+
     print(f'Shape of combined dataframe: {combined_df.shape}')
     print(f'========== {stock_ticker} combined data saved! ==========')
     return combined_df
@@ -90,7 +85,8 @@ def aggregate_data(stock_ticker):
 
 if __name__ == "__main__":
 
-    for stock in crawler.RANDOM_SELECTED_STOCKS:
-        aggregate_df = aggregate_data(stock)
+    for stock in crawler.PORTFOLIO:
+        aggregate_data(stock, folder_name='portfolio_data')
 
-
+    for stock in crawler.RANDOM_STOCKS:
+        aggregate_data(stock, folder_name='random_stocks_data')

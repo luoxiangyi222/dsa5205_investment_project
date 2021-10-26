@@ -45,7 +45,7 @@ def show_pair_plot(df, stock_name):
     # plt.savefig(f'../trading_strategy_figure/{stock_name}_corr_heatmap.jpeg')
 
 
-for stock in crawler.RANDOM_SELECTED_STOCKS:
+for stock in crawler.PORTFOLIO:
     df = pd.read_csv(f'../trading_strategy_data/combined_data/{stock}_combined_data.csv')
     # show_correlation_heatmap(df, stock)
     show_pair_plot(df, stock)

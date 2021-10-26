@@ -14,6 +14,7 @@ from pytrends import dailydata
 import requests
 import time
 import yfinance as yf
+import random
 
 
 # pandas setting
@@ -36,27 +37,41 @@ ALPHA_VANTAGE_API_KEY = '6OFO07W5FJ2R943U'
 POLYGON_API_KEY = 'xKi2aeZYxFcpbe8xJXxwHlV7cj50AU6X'
 
 # TODO: need update based on stock selection results
-PORTFOLIO = []
 
-RANDOM_SELECTED_STOCKS = ['AAPL', 'COST']
+# momentum
+PORTFOLIO = ['PLUS', 'BKSC', 'ARTNA', 'HWKN', 'PDCO', 'LNT', 'XEL', 'PINC', 'CMCSA', 'JBSS']
+portfolio_kw_list = ['ePlus', 'Bank of South Carolina', 'Artesian Resources', 'Hawkins', 'Patterson Companies',
+                     'Alliant Energy', 'Xcel Energy', 'Premier', 'Comcast', 'John B. Sanfilippo & Son']
 
-ticker_objects = [yf.Ticker(s) for s in RANDOM_SELECTED_STOCKS]
+# Randomly selected stocks for RFE
+
+RANDOM_STOCKS = ['AAPL', 'COST', 'UTHR', 'LBTYK', 'SBUX', 'TXN', 'ERIC', 'DGRW', 'FMB', 'THRM',
+                 'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'HYAC', 'MEDP', 'GRMN', 'PIE', 'CIZ',
+                 'VYMI', 'HOFT', 'IJT', 'LCA', 'PDBC', 'HUBG', 'PFF', 'BSJO', 'JCTCF', 'SRCL']
+random_kw_list = ['Apple', 'Costco', 'United Therapeutics', 'Liberty Global', 'Starbucks', 'Texas Instruments', 'Ericsson', 'WisdomTree', 'FMB', 'Gentherm',
+                  'OpenText', 'iShares Biotechnology', ' IUSG', 'Broadcom', 'Hurco', 'Haymaker Acquisition', 'Medpace', 'Garmin', 'PIE', 'CIZ',
+                  'VYMI', 'Hooker Furniture', 'IJT', 'Landcadia Holdings', 'PDBC', 'Hub Group', 'PFF', 'BSJO', 'Jewett Cameron Trading', 'Stericycle']
+
+
+portfolio_ticker_objects = [yf.Ticker(s) for s in PORTFOLIO]
+
+stocks_ticker_objects = [yf.Ticker(s) for s in RANDOM_STOCKS]
 
 
 # ##### company basic information #####
 
 
-def get_stock_info(ticker_list):
+def get_stock_info(stocks, ticker_list, folder_name='random_stocks_data'):
     for i, t in enumerate(ticker_list):
-        with open(f'../trading_strategy_data/selected_stocks_data/{RANDOM_SELECTED_STOCKS[i]}_info.json', 'w') as fp:
+        with open(f'../trading_strategy_data/{folder_name}/{stocks[i]}_info.json', 'w') as fp:
             json.dump(t.info, fp)
-            print(f'========== {RANDOM_SELECTED_STOCKS[i]} company info saved! ==========')
+            print(f'========== {stocks[i]} company info saved! ==========')
 
 # ################# Historical Price Data #######################
 # Open, High, Low, Volume, Dividends, Stock Splits
 
 
-def get_daily_price_data(ticker_list):
+def get_daily_price_data(stocks, ticker_list, folder_name='random_stocks_data'):
 
     for i, t in enumerate(ticker_list):
         current_t_history = t.history(period='1d',
@@ -64,9 +79,9 @@ def get_daily_price_data(ticker_list):
                                       end=END_DATE_STR)
 
         # save as csv
-        current_t_history.to_csv(f'../trading_strategy_data/selected_stocks_data/'
-                                 f'{RANDOM_SELECTED_STOCKS[i]}_daily_price_data.csv')
-        print(f'========== {RANDOM_SELECTED_STOCKS[i]} daily price saved! ==========')
+        current_t_history.to_csv(f'../trading_strategy_data/{folder_name}/'
+                                 f'{stocks[i]}_daily_price_data.csv')
+        print(f'========== {stocks[i]} daily price saved! ==========')
 
 
 # ################# Historical Technical Indicator Data #######################
@@ -106,7 +121,7 @@ def add_polarize(df, col_name):
     return df
 
 
-def get_TA_features_with_extension(stock_ticker, ta_function_list):
+def get_TA_features_with_extension(stock_ticker, ta_function_list, folder_name='random_stocks_data'):
     """
     Get all TA indicators and proper extension of each indicator.
     Extensions are inspired by existing paper and investpedia.
@@ -295,49 +310,65 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list):
     all_TA_df = pd.concat([ticker_column, all_TA_df], axis=1)
 
     # Save TA dataframe
-    all_TA_df.to_csv(f'../trading_strategy_data/selected_stocks_data/{stock_ticker}_TA_indicators.csv', index=False)
+    all_TA_df.to_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_TA_indicators.csv', index=False)
 
     print(f'========== {stock_ticker} TA indicators saved. ==========')
     return all_TA_df
 
 
-def get_google_trend_data(ticker, keyword, start=START_DATE, end=END_DATE):
+def get_google_trend_data(ticker, keyword, start=START_DATE, end=END_DATE, folder_name='random_stocks_data'):
 
     daily_df = dailydata.get_daily_data(word=keyword,
                                         start_year=start.year, start_mon=start.month,
                                         stop_year=end.year, stop_mon=end.month,
                                         geo=''
                                         )
+    print(daily_df.head())
+
     daily_df = daily_df.reset_index()
     daily_df = daily_df.iloc[:, 0:2]
     daily_df.columns = ['Date', f'{ticker}_daily_trend']
 
-    daily_df.to_csv(f'../trading_strategy_data/google_trend_data/{ticker}_daily_trend.csv', index=False)
+    daily_df.to_csv(f'../trading_strategy_data/{folder_name}/{ticker}_daily_trend.csv', index=False)
     print(f'========== {ticker} daily google search volume index saved! ==========')
     return daily_df
 
 
-if __name__ == "__main__":
+def get_data(stocks, yf_objects, folder):
 
     # basic company information
-    get_stock_info(ticker_objects)
+    get_stock_info(stocks, yf_objects, folder_name=folder)
 
     # price data
-    get_daily_price_data(ticker_objects)
+    get_daily_price_data(stocks, yf_objects, folder_name=folder)
 
     # TA data
     ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
-    for ticker in RANDOM_SELECTED_STOCKS:
-        get_TA_features_with_extension(ticker, ta_list)
+    for ticker in stocks:
+        get_TA_features_with_extension(ticker, ta_list, folder_name=folder)
+
+    print('=====++++++++++ Portfolio Data Crawling finished ++++++++++======')
+
+
+def get_google_portfolio():
 
     # Google daily trend volume index data
-    stock_list = RANDOM_SELECTED_STOCKS
-    # TODO need update keywords for selected ten stocks
-    kw_list = ['Apple', 'Costco']
-    N = len(stock_list)
+    for i in range(10):
+        get_google_trend_data(PORTFOLIO[i], portfolio_kw_list[i], folder_name='portfolio_data')
 
-    for i in range(N):
-        all_cat_trend_df = get_google_trend_data(stock_list[i], kw_list[i])
 
-    print('=====++++++++++ Data Crawling finished ++++++++++======')
+def get_google_stocks():
+    # Google daily trend volume index data
+    for i in range(30):
+        get_google_trend_data(RANDOM_STOCKS[i], random_kw_list[i], folder_name='random_stocks_data')
+
+
+if __name__ == "__main__":
+
+    # get_data(PORTFOLIO, portfolio_ticker_objects, 'portfolio_data')
+    # get_google_portfolio()
+
+    # get_data(RANDOM_STOCKS, stocks_ticker_objects, 'random_stocks_data')
+    get_google_stocks()
+
 
