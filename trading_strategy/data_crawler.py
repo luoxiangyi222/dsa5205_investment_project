@@ -46,12 +46,14 @@ portfolio_kw_list = ['ePlus', 'Bank of South Carolina', 'Artesian Resources', 'H
 # Randomly selected stocks for RFE
 
 RANDOM_STOCKS = ['AAPL', 'COST', 'UTHR', 'LBTYK', 'SBUX', 'TXN', 'ERIC', 'DGRW', 'FMB', 'THRM',
-                 'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'HYAC', 'MEDP', 'GRMN', 'PIE', 'CIZ',
-                 'VYMI', 'HOFT', 'IJT', 'LCA', 'PDBC', 'HUBG', 'PFF', 'BSJO', 'JCTCF', 'SRCL']
+                 'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'ASML', 'MEDP', 'GRMN', 'PIE', 'NFLX',
+                 'VYMI', 'HOFT', 'IJT', 'BABA', 'PDBC', 'HUBG', 'PFF', 'BSJO', 'VWOB', 'SRCL']
 random_kw_list = ['Apple', 'Costco', 'United Therapeutics', 'Liberty Global', 'Starbucks', 'Texas Instruments', 'Ericsson', 'WisdomTree', 'FMB', 'Gentherm',
-                  'OpenText', 'iShares Biotechnology', ' IUSG', 'Broadcom', 'Hurco', 'Haymaker Acquisition', 'Medpace', 'Garmin', 'PIE', 'CIZ',
-                  'VYMI', 'Hooker Furniture', 'IJT', 'Landcadia Holdings', 'PDBC', 'Hub Group', 'PFF', 'BSJO', 'Jewett Cameron Trading', 'Stericycle']
+                  'OpenText', 'iShares Biotechnology', ' IUSG', 'Broadcom', 'Hurco', 'asml', 'Medpace', 'Garmin', 'PIE', 'Netflix',
+                  'VYMI', 'Hooker Furniture', 'IJT', 'Alibaba', 'PDBC', 'Hub Group', 'PFF', 'BSJO', 'VWBO', 'Stericycle']
 
+# RANDOM_STOCKS = ['VWOB']
+# random_kw_list = ['VWOB']
 
 portfolio_ticker_objects = [yf.Ticker(s) for s in PORTFOLIO]
 
@@ -66,6 +68,7 @@ def get_stock_info(stocks, ticker_list, folder_name='random_stocks_data'):
         with open(f'../trading_strategy_data/{folder_name}/{stocks[i]}_info.json', 'w') as fp:
             json.dump(t.info, fp)
             print(f'========== {stocks[i]} company info saved! ==========')
+
 
 # ################# Historical Price Data #######################
 # Open, High, Low, Volume, Dividends, Stock Splits
@@ -327,7 +330,7 @@ def get_google_trend_data(ticker, keyword, start=START_DATE, end=END_DATE, folde
 
     daily_df = daily_df.reset_index()
     daily_df = daily_df.iloc[:, 0:2]
-    daily_df.columns = ['Date', f'{ticker}_daily_trend']
+    daily_df.columns = ['Date', f'daily_trend']
 
     daily_df.to_csv(f'../trading_strategy_data/{folder_name}/{ticker}_daily_trend.csv', index=False)
     print(f'========== {ticker} daily google search volume index saved! ==========')
@@ -366,9 +369,9 @@ def get_google_stocks():
 if __name__ == "__main__":
 
     # get_data(PORTFOLIO, portfolio_ticker_objects, 'portfolio_data')
-    # get_google_portfolio()
+    get_google_portfolio()
 
     # get_data(RANDOM_STOCKS, stocks_ticker_objects, 'random_stocks_data')
-    get_google_stocks()
+    # get_google_stocks()
 
 

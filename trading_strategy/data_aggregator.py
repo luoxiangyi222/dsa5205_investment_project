@@ -76,6 +76,7 @@ def aggregate_data(stock_ticker, folder_name='random_stocks_data'):
     combined_df = combined_df[~((combined_df['Date'] < covid_start_date) |
                                 (combined_df['Date'] > validation_period_stop_date))]
 
+    combined_df = combined_df.replace([np.inf, -np.inf], 0)
     combined_df.to_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_combined_data.csv', index=False)
 
     print(f'Shape of combined dataframe: {combined_df.shape}')
