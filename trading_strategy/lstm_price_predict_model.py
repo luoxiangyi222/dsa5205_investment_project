@@ -74,21 +74,18 @@ def inverse_back_to_price(scaled_price, original_price):
     return price
 
 
-def train(stock_name, feature_subset=None, is_PCA=False):
+def train(stock_name, term_length=2, data_description='all'):
 
-    stock_df = pd.read_csv(f'../trading_strategy_data/combined_data/{stock_name}_combined_data.csv')
+    stock_df = pd.read_csv(f'../trading_strategy_data/portfolio_data/{stock_name}_combined_data.csv')
 
     stock_df = stock_df[stock_df['Date'] < '2021-10-01']
 
-    stock_df = stock_df[['Ticker', 'Date', 'SMA_10', 'MACD', 'Open', 'Close']]
+    # stock_df = stock_df[['Ticker', 'Date', 'SMA_10', 'MACD', 'Open', 'Close']]
 
     scaled_df = pd.DataFrame(scaler.fit_transform(stock_df.iloc[:, 2:]).copy())
     scaled_df.columns = stock_df.columns[2:]
 
-    N = stock_df.shape[0]
-    term_length_list = [2, 5, 10]
-
-    term_length = 2
+    # TODO 1: try different term length
 
     # convert to time series data
     X_arr, Y_df = time_series_conversion_for_LSTM(scaled_df, term_length)
@@ -106,7 +103,8 @@ def train(stock_name, feature_subset=None, is_PCA=False):
     # return lstm, history
     plt.plot(history.history['loss'])
     plt.title(f'Training loss for {stock_name}')
-    plt.savefig(f'../trading_strategy_figure/{stock_name}_training_loss.jpeg')
+    plt.suptitle('batch_size=2, epochs=50', y=1.05, fontsize=18)
+    plt.savefig(f'../trading_strategy_figure/{stock_name}_all_training_loss.jpeg')
 
     # get prediction
     train_pred_Y = lstm.predict(train_X_arr)
@@ -119,15 +117,21 @@ def train(stock_name, feature_subset=None, is_PCA=False):
     yy.columns = ['truth', 'pred']
 
     # Plot the data
+    # TODO 2: also show LSTM model setting,
+    #  e.g. original data / selected features / after PCA, aiming to show improvement,
+    #  e.g. batch size / epoch
+    #  e.g. lstm layer / hidden unit number
+
     data = stock_df[['Date', 'Close']].copy()
     data = data.iloc[term_length:, :]
 
+    # prepare plot data
     train_set = data.iloc[:-validation_length]
     train_set['pred'] = train_pred_Y
     valid_set = data.iloc[-validation_length:]
     valid_set['pred'] = val_pred_Y
 
-    # Visualize the data
+    # plot prediction
     plt.figure(figsize=(14, 8))
     plt.title(f'LSTM Model prediction for {stock_name}', fontsize=18)
     plt.xlabel('Date', fontsize=12)
@@ -135,14 +139,20 @@ def train(stock_name, feature_subset=None, is_PCA=False):
     plt.plot(train_set[['Close', 'pred']])
     plt.plot(valid_set[['Close', 'pred']])
     plt.legend(['Train', 'Train_predict', 'Val', 'Val_predict'], loc='lower right')
-    plt.savefig(f'../trading_strategy_figure/{stock_name}_prediction.jpeg')
+    plt.savefig(f'../trading_strategy_figure/{stock_name}_all_prediction.jpeg')
 
-    # TODO: output Date, true open price, true close price, predict next-day close price
+    # TODO 3: output format
+    #  Date, true open price, true close price, predict next-day close price
 
 
 if __name__ == "__main__":
 
+    # Train using original data
     for stock in crawler.PORTFOLIO:
-        train(stock)
+        train(stock, 2)
+
+    # Train using RFE selected data
+    for stock in crawler.PORTFOLIO:
+        train(stock, 2)
 
 
