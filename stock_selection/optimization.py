@@ -1,5 +1,11 @@
-# Work from：
-# https://amangupta16.medium.com/portfolio-optimization-using-python-part-1-2-9fd80097a606
+# Portfolio Optimization using Efficient Frontier：
+# Original Work is from:
+# Gupta A. Portfolio Optimization Using Python [Part 1/2] [Internet]. Medium. 2021 [cited 10 October 2021].
+# Available from: https://amangupta16.medium.com/portfolio-optimization-using-python-part-1-2-9fd80097a606
+# Modified and Adapted by Huaer Li
+
+# instead of using yearly performance (return and volatility)
+# use monthly data
 
 
 import numpy as np
@@ -9,6 +15,7 @@ import matplotlib.pyplot as plt
 # matplotlib inline
 import scipy.optimize as sco
 
+# load data for portfolio
 contrarian_tickers = []
 with open('./data/contrarian_portfolio.txt') as file:
     for line in file:
@@ -28,10 +35,6 @@ data.columns = [col[1] for col in data.columns.values]
 
 pf_data = data[contrarian_tickers]
 
-# pf_data = pd.DataFrame()
-# # Pulling closing price
-# for stock in stocks:
-#     pf_data[stock] = wb.DataReader(stock, data_source = 'yahoo', start = '2008-1-1')['Adj Close']
 num_stocks = len(stocks)
 
 returns = pf_data.pct_change()
@@ -143,6 +146,8 @@ def display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, r
     print("Monthly Volatility:", round(sdp_min, 2))
     print("\n")
     print(min_vol_allocation)
+    max_sharpe_allocation.to_csv('./data/max_sharpe_allocation.csv', index = True)
+    min_vol_allocation.to_csv('./data/min_vol_allocation.csv', index=True)
 
     plt.figure(figsize=(10, 7))
     plt.scatter(results[0, :], results[1, :], c=results[2, :], cmap='YlGnBu', marker='o', s=10, alpha=0.3)
@@ -154,6 +159,7 @@ def display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, r
     plt.ylabel('Monthly Returns')
     plt.legend(labelspacing=0.8)
     plt.show()
+    plt.savefig('./data/efficient_frontier_without_line.jpg')
 
 
 def display_calculated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate):
@@ -183,6 +189,8 @@ def display_calculated_ef_with_random(mean_returns, cov_matrix, num_portfolios, 
     print("Monthly Volatility:", round(sdp_min, 2))
     print("\n")
     print(min_vol_allocation)
+    max_sharpe_allocation.to_csv('./data/max_sharpe_allocation.csv', index = True)
+    min_vol_allocation.to_csv('./data/min_vol_allocation.csv', index=True)
 
     plt.figure(figsize=(10, 7))
     plt.scatter(results[0, :], results[1, :], c=results[2, :], cmap='YlGnBu', marker='o', s=10, alpha=0.3)
@@ -198,9 +206,11 @@ def display_calculated_ef_with_random(mean_returns, cov_matrix, num_portfolios, 
     plt.ylabel('Monthly Returns')
     plt.legend(labelspacing=0.8)
     plt.show()
+    plt.savefig('./data/efficient_frontier_with_line.jpg')
 
 
-# display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate)
-display_calculated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate)
+if __name__ == "__main__":
+    # display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate)
+    display_calculated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate)
 
 

@@ -40,7 +40,7 @@ w = [0.1] * 10
 ndq_cum = ndq['Adj Close'] / ndq.iloc[0]['Adj Close']
 init_investment = 10000
 ndq_total = init_investment * ndq_cum
-ndq_cum = (ndq_cum - 1)*100
+ndq_cum = (ndq_cum - 1) * 100
 
 
 def cum_return_calculation(tickers, weights):
@@ -62,7 +62,7 @@ def cum_return_calculation(tickers, weights):
 
     sum = data_por.sum(axis=1)
 
-    cum_return = (sum / sum.iloc[0] - 1)*100
+    cum_return = (sum / sum.iloc[0] - 1) * 100
     return cum_return, sum
 
 
@@ -76,45 +76,67 @@ def random_10_stocks(k):
         cum, total = cum_return_calculation(portfolio, w)
         cum_sum += cum
         total_sum += total
-    avg_cum = cum_sum/k
-    avg_total = total_sum/k
+    avg_cum = cum_sum / k
+    avg_total = total_sum / k
     return avg_cum, avg_total
 
+
 a, b = random_10_stocks(10)
-wc = [0,0.1203, 0, 0.4536, 0, 0.2662, 0.1599, 0,0,0]
+wc = [0, 0.1203, 0, 0.4536, 0, 0.2662, 0.1599, 0, 0, 0]
 wd = [0.0042, 0, 0, 0.0961, 0, 0.2427, 0, 0, 0.3778, 0.2792]
 cum_return, y = cum_return_calculation(momentum_tickers, w)
 wcc, y = cum_return_calculation(contrarian_tickers, wc)
 wdc, y = cum_return_calculation(contrarian_tickers, wd)
 c, d = cum_return_calculation(contrarian_tickers, w)
+
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=cum_return.index, y=cum_return, name='Momentum Portfolio Cumulative Return %'))
-fig.add_trace(go.Scatter(x=c.index, y=c, name='Contrarian Portfolio Cumulative Return %'))
+fig.add_trace(go.Scatter(x=cum_return.index, y=cum_return, name='Momentum Portfolio Cumulative Return %',
+                         line=dict(color='lightgreen', width=4, dash='dot')))
+fig.add_trace(go.Scatter(x=c.index, y=c, name='Contrarian Portfolio Cumulative Return %',
+                         line=dict(color='lightcoral', width=4)))
 # fig.add_trace(go.Scatter(x=wcc.index, y=wcc, name='Max Shape Ratio Weighted Contrarian Portfolio Cumulative Return %'))
 # fig.add_trace(go.Scatter(x=wdc.index, y=wdc, name='Min Volatility Weighted Contrarian Portfolio Cumulative Return %'))
-fig.add_trace(go.Scatter(x=a.index, y=a, name='Cumulative Return % averaged over 10 randomly selected portfolio'))
+fig.add_trace(go.Scatter(x=a.index, y=a, name='Cumulative Return % averaged over 10 randomly selected portfolio',
+                         line=dict(color='sienna', width=4, dash='dash')))
 # fig.add_trace(go.Scatter(x=ndq_cum.index, y=ndq_cum, name='NASDAQ Index Cumulative Return %'))
-fig.update_layout(title="Cumulative Return % (Portfolio vs NASDAQ Index)")
+fig.update_layout(title="Cumulative Return % (Equal-weighted Momentum and Contrarian Portfolios vs "
+                        "Average over Random Portfolio)")
 fig.show()
 
 fig2 = go.Figure()
-fig2.add_trace(go.Scatter(x=cum_return.index, y=cum_return, name='Momentum Portfolio Cumulative Return %'))
-fig2.add_trace(go.Scatter(x=c.index, y=c, name='Contrarian Portfolio Cumulative Return %'))
-fig2.add_trace(go.Scatter(x=ndq_cum.index, y=ndq_cum, name='NASDAQ Index Cumulative Return %'))
+fig2.add_trace(go.Scatter(x=cum_return.index, y=cum_return, name='Momentum Portfolio Cumulative Return %',
+                          line=dict(color='lightgreen', width=4, dash='dot')))
+fig2.add_trace(go.Scatter(x=c.index, y=c, name='Contrarian Portfolio Cumulative Return %',
+                          line=dict(color='lightcoral', width=4)))
+fig2.add_trace(go.Scatter(x=ndq_cum.index, y=ndq_cum, name='NASDAQ Index Cumulative Return %',
+                          line=dict(color='plum', width=4, dash='dash')))
+fig2.update_layout(title="Cumulative Return % (Equal-weighted Momentum and Contrarian Portfolios vs "
+                         "NASDAQ Index)")
 fig2.show()
 
 fig3 = go.Figure()
-fig3.add_trace(go.Scatter(x=c.index, y=c, name='Contrarian Portfolio Cumulative Return %'))
-fig3.add_trace(go.Scatter(x=wcc.index, y=wcc, name='Max Shape Ratio Weighted Contrarian Portfolio Cumulative Return %'))
-fig3.add_trace(go.Scatter(x=wdc.index, y=wdc, name='Min Volatility Weighted Contrarian Portfolio Cumulative Return %'))
+fig3.add_trace(go.Scatter(x=c.index, y=c, name='Contrarian Portfolio Cumulative Return %',
+                          line=dict(color='lightcoral', width=4)))
+fig3.add_trace(go.Scatter(x=wcc.index, y=wcc, name='Max Shape Ratio Weighted Contrarian Portfolio Cumulative Return %',
+                          line=dict(color='orange', width=4)))
+fig3.add_trace(go.Scatter(x=wdc.index, y=wdc, name='Min Volatility Weighted Contrarian Portfolio Cumulative Return %',
+                          line=dict(color='lightskyblue', width=4)))
+fig3.update_layout(title="Cumulative Return % (Equal-weighted Contrarian Portfolio vs "
+                         "Optimized Contrarian Portfolios using Efficient Frontier)")
 fig3.show()
 
 fig4 = go.Figure()
-fig4.add_trace(go.Scatter(x=cum_return.index, y=cum_return, name='Momentum Portfolio Cumulative Return %'))
-fig4.add_trace(go.Scatter(x=c.index, y=c, name='Contrarian Portfolio Cumulative Return %'))
-fig4.add_trace(go.Scatter(x=wcc.index, y=wcc, name='Max Shape Ratio Weighted Contrarian Portfolio Cumulative Return %'))
-fig4.add_trace(go.Scatter(x=wdc.index, y=wdc, name='Min Volatility Weighted Contrarian Portfolio Cumulative Return %'))
-fig4.add_trace(go.Scatter(x=a.index, y=a, name='Cumulative Return % averaged over 10 randomly selected portfolio'))
-# fig.add_trace(go.Scatter(x=ndq_cum.index, y=ndq_cum, name='NASDAQ Index Cumulative Return %'))
-fig4.update_layout(title="Cumulative Return % (Portfolio vs NASDAQ Index)")
+fig4.add_trace(go.Scatter(x=cum_return.index, y=cum_return, name='Momentum Portfolio Cumulative Return %',
+                          line=dict(color='lightgreen', width=4, dash='dot')))
+fig4.add_trace(go.Scatter(x=c.index, y=c, name='Contrarian Portfolio Cumulative Return %',
+                          line=dict(color='lightcoral', width=4)))
+fig4.add_trace(go.Scatter(x=wcc.index, y=wcc, name='Max Shape Ratio Weighted Contrarian Portfolio Cumulative Return %',
+                          line=dict(color='orange', width=4)))
+fig4.add_trace(go.Scatter(x=wdc.index, y=wdc, name='Min Volatility Weighted Contrarian Portfolio Cumulative Return %',
+                          line=dict(color='lightskyblue', width=4)))
+fig4.add_trace(go.Scatter(x=a.index, y=a, name='Cumulative Return % averaged over 10 randomly selected portfolio',
+                          line=dict(color='sienna', width=4, dash='dash')))
+fig4.add_trace(go.Scatter(x=ndq_cum.index, y=ndq_cum, name='NASDAQ Index Cumulative Return %',
+                          line=dict(color='plum', width=4, dash='dash')))
+fig4.update_layout(title="Cumulative Return % (Various Portfolios vs NASDAQ Index)")
 fig4.show()
