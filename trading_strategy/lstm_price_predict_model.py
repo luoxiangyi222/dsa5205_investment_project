@@ -76,83 +76,226 @@ def inverse_back_to_price(scaled_price, original_price):
 
 def train(stock_name, term_length=2, data_description='all'):
 
-    stock_df = pd.read_csv(f'../trading_strategy_data/portfolio_data/{stock_name}_combined_data.csv')
-
-    stock_df = stock_df[stock_df['Date'] < '2021-10-01']
-
-    # stock_df = stock_df[['Ticker', 'Date', 'SMA_10', 'MACD', 'Open', 'Close']]
-
-    scaled_df = pd.DataFrame(scaler.fit_transform(stock_df.iloc[:, 2:]).copy())
-    scaled_df.columns = stock_df.columns[2:]
-
-    # TODO 1: try different term length
-
-    # convert to time series data
-    X_arr, Y_df = time_series_conversion_for_LSTM(scaled_df, term_length)
-    # do regression task
-    Y_arr = np.array(Y_df['Close'])
-
-    # split data
     validation_length = 43
-    train_X_arr, val_X_arr = X_arr[:-validation_length, :], X_arr[-validation_length:, :]
-    train_Y_arr, val_Y_arr = Y_arr[:-validation_length], Y_arr[-validation_length:]
+    df = None
 
-    lstm = compile_LSTM_model(train_X_arr.shape[1], train_X_arr.shape[2])
-    history = lstm.fit(train_X_arr, train_Y_arr, batch_size=2, epochs=50)
 
-    # return lstm, history
-    plt.plot(history.history['loss'])
-    plt.title(f'Training loss for {stock_name}')
-    plt.suptitle('batch_size=2, epochs=50', y=1.05, fontsize=18)
-    plt.savefig(f'../trading_strategy_figure/{stock_name}_all_training_loss.jpeg')
+    if data_description == 'rfe_pca':
 
-    # get prediction
-    train_pred_Y = lstm.predict(train_X_arr)
-    train_pred_Y = inverse_back_to_price(train_pred_Y, np.array(stock_df['Close']))
-    val_pred_Y = lstm.predict(val_X_arr)
-    val_pred_Y = inverse_back_to_price(val_pred_Y, np.array(stock_df['Close']))
+        df = pd.read_csv(f'../trading_strategy_data/portfolio_data/{stock_name}_pca_data.csv')
+        df = df[df['Date'] < '2021-10-01'].copy()
 
-    val_Y_arr = inverse_back_to_price(val_Y_arr, np.array(stock_df['Close']))
-    yy = pd.concat([pd.DataFrame(val_Y_arr), pd.DataFrame(val_pred_Y)], axis=1)
-    yy.columns = ['truth', 'pred']
+        stock_df = df.iloc[:, 2:]
+        stock_df.columns = df.columns[2:]
 
-    # Plot the data
-    # TODO 2: also show LSTM model setting,
-    #  e.g. original data / selected features / after PCA, aiming to show improvement,
-    #  e.g. batch size / epoch
-    #  e.g. lstm layer / hidden unit number
+        X_arr, Y_df = time_series_conversion_for_LSTM(stock_df, term_length)
+        Y_arr = np.array(Y_df['Close'])
 
-    data = stock_df[['Date', 'Close']].copy()
-    data = data.iloc[term_length:, :]
+        # split data
+        train_X_arr, val_X_arr = X_arr[:-validation_length, :], X_arr[-validation_length:, :]
+        train_Y_arr, val_Y_arr = Y_arr[:-validation_length], Y_arr[-validation_length:]
 
-    # prepare plot data
-    train_set = data.iloc[:-validation_length]
-    train_set['pred'] = train_pred_Y
-    valid_set = data.iloc[-validation_length:]
-    valid_set['pred'] = val_pred_Y
 
-    # plot prediction
-    plt.figure(figsize=(14, 8))
-    plt.title(f'LSTM Model prediction for {stock_name}', fontsize=18)
-    plt.xlabel('Date', fontsize=12)
-    plt.ylabel('Close Price USD ($)', fontsize=12)
-    plt.plot(train_set[['Close', 'pred']])
-    plt.plot(valid_set[['Close', 'pred']])
-    plt.legend(['Train', 'Train_predict', 'Val', 'Val_predict'], loc='lower right')
-    plt.savefig(f'../trading_strategy_figure/{stock_name}_all_prediction.jpeg')
+        lstm = compile_LSTM_model(train_X_arr.shape[1], train_X_arr.shape[2])
+        history = lstm.fit(train_X_arr, train_Y_arr, batch_size=2, epochs=50)
+
+        subtitle_string = f'data: {data_description} term_length: {term_length}\n' \
+                          f' batch_size=2, epochs=50 lstm output dim: 50'
+
+        # get prediction
+        train_pred_Y = lstm.predict(train_X_arr)
+        val_pred_Y = lstm.predict(val_X_arr)
+
+        # save training period prediction
+        output_df = df.iloc[term_length:-validation_length, 1]
+
+        train_yy_df = pd.concat(
+            [pd.DataFrame(output_df).reset_index(drop=True), pd.DataFrame(train_Y_arr), pd.DataFrame(train_pred_Y)],
+            axis=1)
+        train_yy_df.columns = ['Date', 'true_Close', 'pred_Close']
+        train_yy_df.to_csv(
+            f'../trading_strategy_data/lstm_results/{stock_name}_{data_description}_{term_length}_train_prediction.csv',
+            index=False)
+        print('===== Train prediction saved =====')
+
+        # save validation period prediction
+        output_df = df.iloc[-validation_length:, 1]
+        val_yy_df = pd.concat(
+            [pd.DataFrame(output_df).reset_index(drop=True), pd.DataFrame(val_Y_arr), pd.DataFrame(val_pred_Y)], axis=1)
+        val_yy_df.columns = ['Date', 'true_Close', 'pred_Close']
+        val_yy_df.to_csv(
+            f'../trading_strategy_data/lstm_results/{stock_name}_{data_description}_{term_length}_val_prediction.csv',
+            index=False)
+        print('===== Valid prediction saved =====')
+
+        # plot training loss
+        plt.figure(figsize=(10, 8))
+        plt.plot(history.history['loss'], linestyle='--', marker='o')
+        plt.title(f'Training loss for {stock_name}')
+        plt.suptitle(subtitle_string)
+        plt.xlabel('epochs')
+        plt.ylabel('mean absolute error')
+        # plt.show()
+        plt.savefig(f'../trading_strategy_figure/{stock_name}_{data_description}_{term_length}_training_loss.jpeg')
+        print('===== Train loss figure saved =====')
+
+
+        # Plot the data
+        # TODO 2: also show LSTM model setting,
+        #  e.g. original data / selected features / after PCA, aiming to show improvement,
+        #  e.g. batch size / epoch
+        #  e.g. lstm layer / hidden unit number
+
+        data = df[['Date', 'Close']].copy()
+        data = data.iloc[term_length:, :]
+
+        # prepare plot data
+        train_set = data.iloc[:-validation_length]
+        train_set['pred'] = train_pred_Y
+        valid_set = data.iloc[-validation_length:]
+        valid_set['pred'] = val_pred_Y
+
+        # plot prediction
+        plt.figure(figsize=(14, 8))
+        plt.title(f'LSTM Model prediction for {stock_name}', fontsize=18)
+        plt.suptitle(subtitle_string)
+        plt.xlabel('Date', fontsize=12)
+        plt.ylabel('Close Price USD ($)', fontsize=12)
+        plt.plot(train_set[['Close', 'pred']])
+        plt.plot(valid_set[['Close', 'pred']])
+        plt.legend(['Train', 'Train_predict', 'Val', 'Val_predict'], loc='lower right')
+        # plt.show()
+        plt.savefig(f'../trading_strategy_figure/{stock_name}_{data_description}_{term_length}_prediction.jpeg')
+        print('===== Price prediction saved =====')
+
+        print(' ++++++++++ ')
+
+
+    else:
+
+        if data_description == 'all':
+            df = pd.read_csv(f'../trading_strategy_data/portfolio_data/{stock_name}_combined_data.csv')
+        elif data_description == 'rfe':
+            df = pd.read_csv(f'../trading_strategy_data/portfolio_data/{stock_name}_combined_data.csv')
+
+        df = df[df['Date'] < '2021-10-01']
+
+        # min-max scaling
+        stock_df = pd.DataFrame(scaler.fit_transform(df.iloc[:, 2:]).copy())
+        stock_df.columns = df.columns[2:]
+
+        # convert to time series data
+        X_arr, Y_df = time_series_conversion_for_LSTM(stock_df, term_length)
+        # do regression task
+        Y_arr = np.array(Y_df['Close'])
+
+        # print(df.iloc[:5, [1, 2, -1]])
+        # print(stock_name)
+        # for i in range(5):
+        #     print(X_arr[i])
+        #     print(Y_arr[i])
+        # breakpoint()
+
+        # split data
+        train_X_arr, val_X_arr = X_arr[:-validation_length, :], X_arr[-validation_length:, :]
+        train_Y_arr, val_Y_arr = Y_arr[:-validation_length], Y_arr[-validation_length:]
+
+        lstm = compile_LSTM_model(train_X_arr.shape[1], train_X_arr.shape[2])
+        history = lstm.fit(train_X_arr, train_Y_arr, batch_size=2, epochs=50)
+
+        subtitle_string = f'data: {data_description} term_length: {term_length}\n' \
+                          f' batch_size=2, epochs=50 lstm output dim: 50'
+
+        # get prediction
+        train_pred_Y = lstm.predict(train_X_arr)
+        train_pred_Y = inverse_back_to_price(train_pred_Y, np.array(df['Close']))
+        val_pred_Y = lstm.predict(val_X_arr)
+        val_pred_Y = inverse_back_to_price(val_pred_Y, np.array(df['Close']))
+
+        # save training period prediction
+        output_df = df.iloc[term_length:-validation_length, 1]
+        train_Y_arr = inverse_back_to_price(train_Y_arr, np.array(df['Close']))
+        train_yy_df = pd.concat(
+            [pd.DataFrame(output_df).reset_index(drop=True), pd.DataFrame(train_Y_arr), pd.DataFrame(train_pred_Y)], axis=1)
+        train_yy_df.columns = ['Date', 'true_Close', 'pred_Close']
+        train_yy_df.to_csv(
+            f'../trading_strategy_data/lstm_results/{stock_name}_{data_description}_{term_length}_train_prediction.csv',
+            index=False)
+        print(train_yy_df)
+
+        # save validation period prediction
+        output_df = df.iloc[-validation_length:, 1]
+        val_Y_arr = inverse_back_to_price(val_Y_arr, np.array(df['Close']))
+        val_yy_df = pd.concat([pd.DataFrame(output_df).reset_index(drop=True), pd.DataFrame(val_Y_arr), pd.DataFrame(val_pred_Y)], axis=1)
+        val_yy_df.columns = ['Date', 'true_Close', 'pred_Close']
+        val_yy_df.to_csv(f'../trading_strategy_data/lstm_results/{stock_name}_{data_description}_{term_length}_val_prediction.csv', index=False)
+        print(val_yy_df)
+
+
+        # # plot training loss
+        # plt.figure(figsize=(10, 8))
+        # plt.plot(history.history['loss'], linestyle='--', marker='o')
+        # plt.title(f'Training loss for {stock_name}')
+        # plt.suptitle(subtitle_string)
+        # plt.xlabel('epochs')
+        # plt.ylabel('mean absolute error')
+        # plt.show()
+        # # plt.savefig(f'../trading_strategy_figure/{stock_name}_{data_description}_{term_length}_training_loss.jpeg')
+        #
+        #
+        # # Plot the data
+        # # TODO 2: also show LSTM model setting,
+        # #  e.g. original data / selected features / after PCA, aiming to show improvement,
+        # #  e.g. batch size / epoch
+        # #  e.g. lstm layer / hidden unit number
+        #
+        # data = df[['Date', 'Close']].copy()
+        # data = data.iloc[term_length:, :]
+        #
+        # # prepare plot data
+        # train_set = data.iloc[:-validation_length]
+        # train_set['pred'] = train_pred_Y
+        # valid_set = data.iloc[-validation_length:]
+        # valid_set['pred'] = val_pred_Y
+        #
+        # # plot prediction
+        # plt.figure(figsize=(14, 8))
+        # plt.title(f'LSTM Model prediction for {stock_name}', fontsize=18)
+        # plt.suptitle(subtitle_string)
+        # plt.xlabel('Date', fontsize=12)
+        # plt.ylabel('Close Price USD ($)', fontsize=12)
+        # plt.plot(train_set[['Close', 'pred']])
+        # plt.plot(valid_set[['Close', 'pred']])
+        # plt.legend(['Train', 'Train_predict', 'Val', 'Val_predict'], loc='lower right')
+        # plt.show()
+        # # plt.savefig(f'../trading_strategy_figure/{stock_name}_{data_description}_{term_length}_prediction.jpeg')
 
     # TODO 3: output format
     #  Date, true open price, true close price, predict next-day close price
 
 
+
 if __name__ == "__main__":
+    #
+    # for stock in crawler.PORTFOLIO:
+    #     train(stock)
 
     # Train using original data
-    for stock in crawler.PORTFOLIO:
-        train(stock, 2)
+    # for stock in crawler.PORTFOLIO:
+    #     train(stock, 2, 'all')
+    #     train(stock, 5, 'all')
+    #     train(stock, 10, 'all')
+    #
+    # # Train using RFE selected data
+    # for stock in crawler.PORTFOLIO:
+    #     train(stock, 2, 'rfe')
+    #     train(stock, 5, 'rfe')
+    #     train(stock, 10, 'rfe')
 
     # Train using RFE selected data
     for stock in crawler.PORTFOLIO:
-        train(stock, 2)
+        train(stock, 2, 'rfe_pca')
+        train(stock, 5, 'rfe_pca')
+        train(stock, 10, 'rfe_pca')
 
 

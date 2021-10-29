@@ -38,10 +38,16 @@ POLYGON_API_KEY = 'xKi2aeZYxFcpbe8xJXxwHlV7cj50AU6X'
 
 # TODO: need update based on stock selection results
 
-# momentum
-PORTFOLIO = ['PLUS', 'BKSC', 'ARTNA', 'HWKN', 'PDCO', 'LNT', 'XEL', 'PINC', 'CMCSA', 'JBSS']
-portfolio_kw_list = ['ePlus', 'Bank of South Carolina', 'Artesian Resources', 'Hawkins', 'Patterson Companies',
-                     'Alliant Energy', 'Xcel Energy', 'Premier', 'Comcast', 'John B. Sanfilippo & Son']
+# momentum based
+# PORTFOLIO = ['PLUS', 'BKSC', 'ARTNA', 'HWKN', 'PDCO', 'LNT', 'XEL', 'PINC', 'CMCSA', 'JBSS']
+# portfolio_kw_list = ['ePlus', 'Bank of South Carolina', 'Artesian Resources', 'Hawkins', 'Patterson Companies',
+#                      'Alliant Energy', 'Xcel Energy', 'Premier', 'Comcast', 'John B. Sanfilippo & Son']
+
+# contrarian based
+
+PORTFOLIO = ['PLPC', 'RILY', 'ULH', 'FSBC', 'WABC', 'WVVI', 'LGIH', 'WIRE', 'SLGN', 'ARTNA']
+portfolio_kw_list = ['Preformed Line Products', 'B Riley Financial', 'Universal Logistics Holdings', 'Five Star Bancorp', 'Westamerica',
+                     'Willamette Valley Vineyards', 'LGI Homes', 'Encore Wire', 'Silgan Holdings', 'Artesian Resources']
 
 # Randomly selected stocks for RFE
 
@@ -368,7 +374,7 @@ def get_google_stocks():
 
 if __name__ == "__main__":
 
-    # get_data(PORTFOLIO, portfolio_ticker_objects, 'portfolio_data')
+    get_data(PORTFOLIO, portfolio_ticker_objects, 'portfolio_data')
     get_google_portfolio()
 
     # get_data(RANDOM_STOCKS, stocks_ticker_objects, 'random_stocks_data')

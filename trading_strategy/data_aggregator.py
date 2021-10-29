@@ -91,5 +91,5 @@ if __name__ == "__main__":
     for stock in crawler.PORTFOLIO:
         aggregate_data(stock, folder_name='portfolio_data')
 
-    for stock in crawler.RANDOM_STOCKS:
-        aggregate_data(stock, folder_name='random_stocks_data')
+    # for stock in crawler.RANDOM_STOCKS:
+    #     aggregate_data(stock, folder_name='random_stocks_data')
