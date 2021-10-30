@@ -43,54 +43,64 @@ def RFE(stock):
 def RFE_voting():
 
     feature_ranking_list = []
-    aggregate_ranking = defaultdict(lambda: 0)
+    aggregate_ranking = defaultdict(lambda: (0, 0))   # (number of voters, total score)
 
     # RFE for feature selection
     for stock in crawler.RANDOM_STOCKS:
         ranking = RFE(stock)
         feature_ranking_list.append(ranking)
 
+    # TODO: Plot feature ranking for 30 stocks
+
     for rank_list in feature_ranking_list:
         for i, f in enumerate(rank_list):
-            aggregate_ranking[f] += i
+            aggregate_ranking[f][0] += 1
+            aggregate_ranking[f][1] += (i + 1)
 
-    sort_f = sorted(aggregate_ranking.items(), key=lambda x: x[1])
+    sort_f_dict = sorted(aggregate_ranking.items(), key=lambda x: x[1][1] / x[1][0])
+    average_score = [v[1] / v[0] for _, v in sort_f_dict]
+    sorted_features = [f[0] for f in sort_f_dict]
+    feature_ticks = [f[0] + ' ' + str(i) for i, f in enumerate(sort_f_dict)]
 
-    feature_ticks = [f[0] + ' ' + str(i) for i, f in enumerate(sort_f)]
-    features = [f[0] for f in sort_f]
-    scores = [f[1] for f in sort_f]
-
+    # plot ranking information
     plt.figure(figsize=(14, 12))
-    plt.plot(scores, linestyle='--', marker='o')
+    plt.plot(average_score, linestyle='--', marker='o')
 
     plt.xticks(list(range(len(feature_ticks))), feature_ticks, rotation=90, fontsize=8)
     plt.xlabel('Feature rank')
     plt.ylabel('Rank Score')
     plt.title('Feature Ranking Score', fontsize=18)
-    plt.savefig('../trading_strategy_figure/feature_rank_score.jpeg', bbox_inches='tight')
+    plt.savefig('../trading_strategy_figure/RFE/feature_rank_score.jpeg', bbox_inches='tight')
 
-    features = features[:43]
+    selected_features = sorted_features[:43]
     with open("../trading_strategy_figure/rfe_selected_features.txt", 'w') as file:
-        s = ",".join(features)
+        s = ",".join(selected_features)
         file.write(s)
-    return features
+    return selected_features
 
 
-def preprocessing():
+def preprocessing(select_strategy, folder_name):
 
+    # get RFE selected features
     with open('../trading_strategy_figure/rfe_selected_features.txt') as f:
         line = f.read()
 
     features = line.split(',')
 
-    for stock in crawler.PORTFOLIO:
+    if select_strategy == 'momentum':
+        portfolio = crawler.MOMENTUM_PORTFOLIO
+    elif select_strategy == 'contrarian':
+        portfolio = crawler.CONTRARIAN_PORTFOLIO
+    else:
+        raise ValueError()
+
+    for stock in portfolio:
         print(f'=========={stock}===========')
-        df = pd.read_csv(f'../trading_strategy_data/portfolio_data/{stock}_combined_data.csv')
+        df = pd.read_csv(f'../trading_strategy_data/{folder_name}/{stock}_combined_data.csv')
 
         rfe_df = df[features]
-        rfe_df = pd.concat([df[['Ticker','Date']], rfe_df], axis=1)
-        print(rfe_df.head())
-        rfe_df.to_csv(f'../trading_strategy_data/portfolio_data/{stock}_rfe_data.csv', index=False)
+        rfe_df = pd.concat([df[['Ticker', 'Date']], rfe_df], axis=1)
+        rfe_df.to_csv(f'../trading_strategy_data/{folder_name}/{stock}_rfe_data.csv', index=False)
 
         # keep close price
         Y = df['Close'].copy()
@@ -100,10 +110,9 @@ def preprocessing():
         # min max transformation
         scaler = MinMaxScaler()
         X = scaler.fit_transform(X)
-
+        # PCA
         pca = PCA(n_components=10)
         pca_X = pca.fit_transform(X)
-        print(pca_X.shape)
 
         col_names = []
         for i in range(pca_X.shape[1]):
@@ -113,20 +122,21 @@ def preprocessing():
         pca_df = pd.concat([df[['Ticker', 'Date']], pca_df, Y], axis=1)
         pca_df.to_csv(f'../trading_strategy_data/portfolio_data/{stock}_pca_data.csv', index=False)
 
-        # plot ratio
-        # plt.figure(figsize=(10, 8))
-        # plt.plot(pca.explained_variance_ratio_, linestyle='--', marker='o')
-        # plt.xlabel('PC')
-        # plt.ylabel('percentage of variance explained')
-        # plt.title(f'{stock}: PCA results')
-        # plt.savefig(f'../trading_strategy_figure/PCA_{stock}.jpeg', bbox_inches='tight')
+        # plot PCA ratio
+        plt.figure(figsize=(10, 8))
+        plt.plot(pca.explained_variance_ratio_, linestyle='--', marker='o')
+        plt.xlabel('PC')
+        plt.ylabel('Percentage of variance explained')
+        plt.title(f'{stock}: PC explained variance plot')
+        plt.savefig(f'../trading_strategy_figure/PCA/PCA_{stock}.jpeg', bbox_inches='tight')
 
 
 if __name__ == "__main__":
 
     # rfe_result = RFE_voting()
 
-    preprocessing()
+    preprocessing('momentum', 'portfolio_data/momentum')
+    preprocessing('contrarian', 'portfolio_data/contrarian')
 
 
 

@@ -31,39 +31,44 @@ END_DATE = date.fromisoformat(END_DATE_STR)
 # ################# API keys #############################
 # Get Technical Analysis indicators
 # API documentation: https://www.alphavantage.co/documentation/
-ALPHA_VANTAGE_API_KEY = '6OFO07W5FJ2R943U'
+# ALPHA_VANTAGE_API_KEY = '6OFO07W5FJ2R943U'
+ALPHA_VANTAGE_API_KEY ='PIY8WPDP3QZSJZXR'
 
 # API documentation: https://polygon.io/docs/getting-started
 POLYGON_API_KEY = 'xKi2aeZYxFcpbe8xJXxwHlV7cj50AU6X'
 
-# TODO: need update based on stock selection results
 
 # momentum based
-# PORTFOLIO = ['PLUS', 'BKSC', 'ARTNA', 'HWKN', 'PDCO', 'LNT', 'XEL', 'PINC', 'CMCSA', 'JBSS']
-# portfolio_kw_list = ['ePlus', 'Bank of South Carolina', 'Artesian Resources', 'Hawkins', 'Patterson Companies',
-#                      'Alliant Energy', 'Xcel Energy', 'Premier', 'Comcast', 'John B. Sanfilippo & Son']
+MOMENTUM_PORTFOLIO = ['PLUS', 'BKSC', 'ARTNA', 'HWKN', 'PDCO', 'LNT', 'XEL', 'PINC', 'CMCSA', 'JBSS']
+momentum_portfolio_kw_list = ['ePlus', 'Bank of South Carolina', 'Artesian Resources', 'Hawkins', 'Patterson Companies',
+                              'Alliant Energy', 'Xcel Energy', 'Premier', 'Comcast', 'John B. Sanfilippo & Son']
+
 
 # contrarian based
+CONTRARIAN_PORTFOLIO = ['PLPC', 'RILY', 'ULH', 'FSBC', 'WABC',
+                        'WVVI', 'LGIH', 'WIRE', 'SLGN', 'ARTNA']
+contrarian_portfolio_kw_list = ['Preformed Line Products', 'B Riley Financial', 'Universal Logistics Holdings',
+                                'Five Star Bancorp', 'Westamerica',
+                                'Willamette Valley Vineyards', 'LGI Homes', 'Encore Wire', 'Silgan Holdings',
+                                'Artesian Resources']
 
-PORTFOLIO = ['PLPC', 'RILY', 'ULH', 'FSBC', 'WABC', 'WVVI', 'LGIH', 'WIRE', 'SLGN', 'ARTNA']
-portfolio_kw_list = ['Preformed Line Products', 'B Riley Financial', 'Universal Logistics Holdings', 'Five Star Bancorp', 'Westamerica',
-                     'Willamette Valley Vineyards', 'LGI Homes', 'Encore Wire', 'Silgan Holdings', 'Artesian Resources']
 
 # Randomly selected stocks for RFE
+# RANDOM_STOCKS = ['AAPL', 'COST', 'UTHR', 'LBTYK', 'SBUX', 'TXN', 'ERIC', 'DGRW', 'FMB', 'THRM',
+#                  'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'ASML', 'MEDP', 'GRMN', 'PIE', 'NFLX',
+#                  'VYMI', 'HOFT', 'IJT', 'BABA', 'PDBC', 'HUBG', 'PFF', 'BSJO', 'VWOB', 'SRCL']
+# random_kw_list = ['Apple', 'Costco', 'United Therapeutics', 'Liberty Global', 'Starbucks', 'Texas Instruments', 'Ericsson', 'WisdomTree', 'FMB', 'Gentherm',
+#                   'OpenText', 'iShares Biotechnology', ' IUSG', 'Broadcom', 'Hurco', 'asml', 'Medpace', 'Garmin', 'PIE', 'Netflix',
+#                   'VYMI', 'Hooker Furniture', 'IJT', 'Alibaba', 'PDBC', 'Hub Group', 'PFF', 'BSJO', 'VWBO', 'Stericycle']
 
-RANDOM_STOCKS = ['AAPL', 'COST', 'UTHR', 'LBTYK', 'SBUX', 'TXN', 'ERIC', 'DGRW', 'FMB', 'THRM',
-                 'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'ASML', 'MEDP', 'GRMN', 'PIE', 'NFLX',
-                 'VYMI', 'HOFT', 'IJT', 'BABA', 'PDBC', 'HUBG', 'PFF', 'BSJO', 'VWOB', 'SRCL']
-random_kw_list = ['Apple', 'Costco', 'United Therapeutics', 'Liberty Global', 'Starbucks', 'Texas Instruments', 'Ericsson', 'WisdomTree', 'FMB', 'Gentherm',
-                  'OpenText', 'iShares Biotechnology', ' IUSG', 'Broadcom', 'Hurco', 'asml', 'Medpace', 'Garmin', 'PIE', 'Netflix',
-                  'VYMI', 'Hooker Furniture', 'IJT', 'Alibaba', 'PDBC', 'Hub Group', 'PFF', 'BSJO', 'VWBO', 'Stericycle']
 
-# RANDOM_STOCKS = ['VWOB']
-# random_kw_list = ['VWOB']
+RANDOM_STOCKS = ['TACO', 'HOFT', 'ULCC', 'BABA', 'PDBC', 'HUBG', 'JBSS', 'FROG', 'DOYU', 'SRCL']
+random_kw_list = ['Del Taco Restaurants', 'Hooker Furniture', 'Frontier Group Holdings', 'Alibaba', 'PDBC', 'Hub Group', 'John B. Sanfilippo & Son', 'JFrog', 'DouYu', 'Stericycle']
 
-portfolio_ticker_objects = [yf.Ticker(s) for s in PORTFOLIO]
-
-stocks_ticker_objects = [yf.Ticker(s) for s in RANDOM_STOCKS]
+# prepare objects lit
+momentum_portfolio_ticker_objects = [yf.Ticker(s) for s in MOMENTUM_PORTFOLIO]
+contrarian_portfolio_ticker_objects = [yf.Ticker(s) for s in CONTRARIAN_PORTFOLIO]
+random_stocks_ticker_objects = [yf.Ticker(s) for s in RANDOM_STOCKS]
 
 
 # ##### company basic information #####
@@ -100,6 +105,8 @@ def truncate_by_date(result_dict, ta_name, start=START_DATE, end=END_DATE):
     """
     Only keep the required timeframe.
     """
+
+    print(result_dict)
 
     result_dict = result_dict[f'Technical Analysis: {ta_name}']
     date_ta_dict = {date.fromisoformat(d): v for d, v in result_dict.items()
@@ -183,9 +190,6 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list, folder_name='
             ta_df['CCI_20_polarize'] = 0
             ta_df.loc[(ta_df['CCI_20'] > 100), 'CCI_20_polarize'] = -1
             ta_df.loc[(ta_df['CCI_20'] < -100), 'CCI_20_polarize'] = 1
-
-            # fluctuation percentage
-            ta_df = add_fluctuation_percentage(ta_df, 'CCI_20')
 
         elif ta == 'ROC':  # ROC 10
             url = f'https://www.alphavantage.co/query?function=ROC&symbol={stock_ticker}' \
@@ -336,7 +340,7 @@ def get_google_trend_data(ticker, keyword, start=START_DATE, end=END_DATE, folde
 
     daily_df = daily_df.reset_index()
     daily_df = daily_df.iloc[:, 0:2]
-    daily_df.columns = ['Date', f'daily_trend']
+    daily_df.columns = ['Date', 'daily_trend']
 
     daily_df.to_csv(f'../trading_strategy_data/{folder_name}/{ticker}_daily_trend.csv', index=False)
     print(f'========== {ticker} daily google search volume index saved! ==========')
@@ -359,14 +363,23 @@ def get_data(stocks, yf_objects, folder):
     print('=====++++++++++ Portfolio Data Crawling finished ++++++++++======')
 
 
-def get_google_portfolio():
+def get_google_portfolio(select_strategy):
 
     # Google daily trend volume index data
-    for i in range(10):
-        get_google_trend_data(PORTFOLIO[i], portfolio_kw_list[i], folder_name='portfolio_data')
+    if select_strategy == 'momentum':
+        for i in range(10):
+            get_google_trend_data(MOMENTUM_PORTFOLIO[i], momentum_portfolio_kw_list[i],
+                                  folder_name='portfolio_data/momentum')
+
+    elif select_strategy == 'contrarian':
+        for i in range(10):
+            get_google_trend_data(CONTRARIAN_PORTFOLIO[i], contrarian_portfolio_kw_list[i],
+                                  folder_name='portfolio_data/contrarian')
+
+    return True
 
 
-def get_google_stocks():
+def get_google_random_stocks():
     # Google daily trend volume index data
     for i in range(30):
         get_google_trend_data(RANDOM_STOCKS[i], random_kw_list[i], folder_name='random_stocks_data')
@@ -374,10 +387,13 @@ def get_google_stocks():
 
 if __name__ == "__main__":
 
-    get_data(PORTFOLIO, portfolio_ticker_objects, 'portfolio_data')
-    get_google_portfolio()
+    # get_data(MOMENTUM_PORTFOLIO, momentum_portfolio_ticker_objects, 'portfolio_data/momentum')
+    # get_google_portfolio('momentum')
+    #
+    # get_data(CONTRARIAN_PORTFOLIO, contrarian_portfolio_ticker_objects, 'portfolio_data/contrarian')
+    # get_google_portfolio('contrarian')
 
-    # get_data(RANDOM_STOCKS, stocks_ticker_objects, 'random_stocks_data')
-    # get_google_stocks()
+    get_data(RANDOM_STOCKS, random_stocks_ticker_objects, 'random_stocks_data')
+    get_google_random_stocks()
 
 

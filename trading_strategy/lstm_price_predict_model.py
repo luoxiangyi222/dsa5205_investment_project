@@ -61,7 +61,6 @@ def compile_LSTM_model(X_shape_1, X_shape_2):
 
     model.compile(loss='mae', optimizer='adam', metrics=['mean_squared_error', 'mean_absolute_error'])
 
-    # metrics = mean_square_error, mean absolute error
     return model
 
 
@@ -170,7 +169,6 @@ def train(stock_name, term_length=2, data_description='all'):
 
         print(' ++++++++++ ')
 
-
     else:
 
         if data_description == 'all':
@@ -274,25 +272,27 @@ def train(stock_name, term_length=2, data_description='all'):
     #  Date, true open price, true close price, predict next-day close price
 
 
-
 if __name__ == "__main__":
     #
     # for stock in crawler.PORTFOLIO:
     #     train(stock)
 
+    term_length_list = [2, 5, 10]
+    descrip_list = ['all', 'rfe', 'rfe_pca']
+
     # Train using original data
-    # for stock in crawler.PORTFOLIO:
-    #     train(stock, 2, 'all')
-    #     train(stock, 5, 'all')
-    #     train(stock, 10, 'all')
-    #
-    # # Train using RFE selected data
-    # for stock in crawler.PORTFOLIO:
-    #     train(stock, 2, 'rfe')
-    #     train(stock, 5, 'rfe')
-    #     train(stock, 10, 'rfe')
+    for stock in crawler.PORTFOLIO:
+        train(stock, 2, 'all')
+        train(stock, 5, 'all')
+        train(stock, 10, 'all')
 
     # Train using RFE selected data
+    for stock in crawler.PORTFOLIO:
+        train(stock, 2, 'rfe')
+        train(stock, 5, 'rfe')
+        train(stock, 10, 'rfe')
+
+    # Train using PCA selected data
     for stock in crawler.PORTFOLIO:
         train(stock, 2, 'rfe_pca')
         train(stock, 5, 'rfe_pca')

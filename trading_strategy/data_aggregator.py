@@ -32,7 +32,7 @@ def get_pandemic_data():
     return [us_case_df, us_death_df]
 
 
-def aggregate_data(stock_ticker, folder_name='random_stocks_data'):
+def aggregate_data(stock_ticker, folder_name):
 
     # ###### load daily price data ######
     price_df = pd.read_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_daily_price_data.csv')
@@ -76,8 +76,8 @@ def aggregate_data(stock_ticker, folder_name='random_stocks_data'):
     combined_df = combined_df[~((combined_df['Date'] < covid_start_date) |
                                 (combined_df['Date'] > validation_period_stop_date))]
 
-    combined_df = combined_df.replace([np.inf, -np.inf], 0)
-    combined_df = combined_df.fillna(0)
+    # combined_df = combined_df.replace([np.inf, -np.inf], 0)
+    # combined_df = combined_df.fillna(0)
 
     combined_df.to_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_combined_data.csv', index=False)
 
@@ -88,8 +88,11 @@ def aggregate_data(stock_ticker, folder_name='random_stocks_data'):
 
 if __name__ == "__main__":
 
-    for stock in crawler.PORTFOLIO:
-        aggregate_data(stock, folder_name='portfolio_data')
+    for stock in crawler.MOMENTUM_PORTFOLIO:
+        aggregate_data(stock, folder_name='portfolio_data/momentum')
 
-    # for stock in crawler.RANDOM_STOCKS:
-    #     aggregate_data(stock, folder_name='random_stocks_data')
+    for stock in crawler.CONTRARIAN_PORTFOLIO:
+        aggregate_data(stock, folder_name='portfolio_data/contrarian')
+
+    for stock in crawler.RANDOM_STOCKS:
+        aggregate_data(stock, folder_name='random_stocks_data')
