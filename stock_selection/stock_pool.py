@@ -61,7 +61,7 @@ print(remove)
 tickers = [x for x in ticker_lst if x not in remove]
 print(tickers)
 
-combined = combined[combined['ticker'].isin(ticker_lst)]
+combined = combined[combined['ticker'].isin(tickers)]
 # calculate stock returns
 data_raw = combined[['ticker', 'adjclose']]
 
@@ -137,10 +137,10 @@ data = data[tickers]
 
 # save ticker for stocks that are in stock pool
 with open('./data/stock_pool.txt', 'w') as f:
-    for item in ticker_lst:
+    for item in tickers:
         f.write("%s\n" % item)
 
 # save the data for all these stocks
-stock_data = combined[combined['ticker'].isin(ticker_lst)]
+stock_data = combined[combined['ticker'].isin(tickers)]
 print(stock_data)
 stock_data.to_csv('./data/stock_pool_data.csv', index=True)

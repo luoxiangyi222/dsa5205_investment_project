@@ -25,13 +25,15 @@ tickers = []
 with open('./data/stock_pool.txt') as file:
     for line in file:
         tickers.append(line.rstrip())
+print(len(tickers))
 
 # tickers = ["FB", "AMZN", "AAPL", "NFLX", "GOOG"]
 # price_data = {ticker: si.get_data(ticker, start_date="2020-01-01", end_date="2021-07-31") for ticker in tickers}
 # combined = reduce(lambda x, y: x.append(y), price_data.values())
 # or directly load data
-combined = pd.read_csv('./data/stock_pool_data.csv', index_col= 0)
+combined = pd.read_csv('./data/stock_pool_data.csv', index_col=0)
 combined['time'] = pd.Index(pd.to_datetime(combined.index))
+
 combined = combined.set_index('time')
 combined = combined.interpolate(method='time')
 
