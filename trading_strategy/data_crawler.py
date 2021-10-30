@@ -59,7 +59,6 @@ MIX_PORTFOLIO = ['RNDB']
 mix_portfolio_kw_list = ['RNDB']
 
 
-
 # Randomly selected stocks for RFE
 RANDOM_STOCKS = ['AAPL', 'COST', 'UTHR', 'LBTYK', 'SBUX', 'TXN', 'ERIC', 'DGRW', 'FMB', 'THRM',
                  'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'ASML', 'MEDP', 'GRMN', 'PIE', 'NFLX',
