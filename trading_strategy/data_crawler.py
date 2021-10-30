@@ -52,9 +52,8 @@ contrarian_portfolio_kw_list = ['Preformed Line Products', 'B Riley Financial', 
                                 'Artesian Resources']
 
 MIX_PORTFOLIO = ['SAGE', 'FSFG', 'RNDB', 'OPRA', 'LARK', 'CFFI', 'UBOH', 'ANTE', 'HMNF', 'MRBK']
-mix_portfolio_kw_list = ['SAGE Therapeutics', 'First Savings Financial', 'Randolph Bancorp', 'Opera Limited', 'stock LARK',
+mix_portfolio_kw_list = ['SAGE Therapeutics', 'First Savings Financial', 'RNDB', 'Opera Limited', 'stock LARK',
                          'C&F Financial','United Bancshares', 'Airnet Technology','HMNF', 'Meridian']
-
 
 
 # Randomly selected stocks for RFE
