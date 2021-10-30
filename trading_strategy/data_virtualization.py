@@ -17,7 +17,7 @@ def show_correlation_heatmap(df, stock_name):
 
     corr = df.corr()
 
-    fig, ax = plt.subplots(figsize=(30, 24))
+    fig, ax = plt.subplots(figsize=(20, 16))
 
     sns.heatmap(corr,
                 xticklabels=corr.columns.values,
@@ -28,24 +28,39 @@ def show_correlation_heatmap(df, stock_name):
                 cmap='coolwarm',
                 annot=True,
                 fmt=".2f",
-                annot_kws={"fontsize": 8}
+                annot_kws={"fontsize": 6}
                 )
 
-    ax.set_title(f'Correlation Heatmap of {stock_name}', fontsize=24)
-
-    plt.savefig(f'../trading_strategy_figure/{stock_name}_corr_heatmap.jpeg')
-
-
-def show_pair_plot(df, stock_name):
-
-    fig, ax = plt.subplots(figsize=(30, 24))
-    sns.pairplot(df, kind='reg')
-    ax.set_title(f'Correlation Heatmap of {stock_name}', fontsize=24)
-    plt.show()
-    # plt.savefig(f'../trading_strategy_figure/{stock_name}_corr_heatmap.jpeg')
+    ax.set_title(f'Correlation Heatmap of {stock_name}', fontsize=20)
+    plt.savefig(f'../trading_strategy_figure/corr_heatmap/{stock_name}_corr_heatmap.jpeg', bbox_inches='tight')
 
 
-for stock in crawler.PORTFOLIO:
-    df = pd.read_csv(f'../trading_strategy_data/combined_data/{stock}_combined_data.csv')
-    # show_correlation_heatmap(df, stock)
-    show_pair_plot(df, stock)
+if __name__ == "__main__":
+
+    # ########## correlation heatmap ##########
+
+    for stock in crawler.MIX_PORTFOLIO:
+        df = pd.read_csv(f'../trading_strategy_data/portfolio_data/momentum/{stock}_combined_data.csv')
+        show_correlation_heatmap(df, stock)
+        print(f'===== {stock} correlation heatmap saved ! =====')
+
+    #
+    # for stock in crawler.MOMENTUM_PORTFOLIO:
+    #     df = pd.read_csv(f'../trading_strategy_data/portfolio_data/momentum/{stock}_combined_data.csv')
+    #     show_correlation_heatmap(df, stock)
+    #     print(f'===== {stock} correlation heatmap saved ! =====')
+    #
+    # print('==========')
+    #
+    # for stock in crawler.CONTRARIAN_PORTFOLIO:
+    #     df = pd.read_csv(f'../trading_strategy_data/portfolio_data/contrarian/{stock}_combined_data.csv')
+    #     show_correlation_heatmap(df, stock)
+    #     print(f'===== {stock} correlation heatmap saved ! =====')
+    #
+    # print('==========')
+    #
+    # for stock in crawler.RANDOM_STOCKS:
+    #     df = pd.read_csv(f'../trading_strategy_data/random_stocks_data/{stock}_combined_data.csv')
+    #     show_correlation_heatmap(df, stock)
+    #     print(f'===== {stock} correlation heatmap saved ! =====')
+

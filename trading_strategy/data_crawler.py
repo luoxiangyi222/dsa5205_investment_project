@@ -43,7 +43,6 @@ MOMENTUM_PORTFOLIO = ['PLUS', 'BKSC', 'ARTNA', 'HWKN', 'PDCO', 'LNT', 'XEL', 'PI
 momentum_portfolio_kw_list = ['ePlus', 'Bank of South Carolina', 'Artesian Resources', 'Hawkins', 'Patterson Companies',
                               'Alliant Energy', 'Xcel Energy', 'Premier', 'Comcast', 'John B. Sanfilippo & Son']
 
-
 # contrarian based
 CONTRARIAN_PORTFOLIO = ['PLPC', 'RILY', 'ULH', 'FSBC', 'WABC',
                         'WVVI', 'LGIH', 'WIRE', 'SLGN', 'ARTNA']
@@ -52,29 +51,36 @@ contrarian_portfolio_kw_list = ['Preformed Line Products', 'B Riley Financial', 
                                 'Willamette Valley Vineyards', 'LGI Homes', 'Encore Wire', 'Silgan Holdings',
                                 'Artesian Resources']
 
+MIX_PORTFOLIO = ['SAGE', 'FSFG', 'RNDB', 'OPRA', 'LARK', 'CFFI', 'UBOH', 'ANTE', 'HMNF', 'MRBK']
+mix_portfolio_kw_list = ['SAGE Therapeutics', 'First Savings Financial', 'Randolph Bancorp', 'Opera Limited', 'Landmark Bancorp',
+                         'C&F Financial','United Bancshares', 'Airnet Technology','HMN Financial', 'Meridian']
+
 
 # Randomly selected stocks for RFE
-# RANDOM_STOCKS = ['AAPL', 'COST', 'UTHR', 'LBTYK', 'SBUX', 'TXN', 'ERIC', 'DGRW', 'FMB', 'THRM',
-#                  'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'ASML', 'MEDP', 'GRMN', 'PIE', 'NFLX',
-#                  'VYMI', 'HOFT', 'IJT', 'BABA', 'PDBC', 'HUBG', 'PFF', 'BSJO', 'VWOB', 'SRCL']
-# random_kw_list = ['Apple', 'Costco', 'United Therapeutics', 'Liberty Global', 'Starbucks', 'Texas Instruments', 'Ericsson', 'WisdomTree', 'FMB', 'Gentherm',
-#                   'OpenText', 'iShares Biotechnology', ' IUSG', 'Broadcom', 'Hurco', 'asml', 'Medpace', 'Garmin', 'PIE', 'Netflix',
-#                   'VYMI', 'Hooker Furniture', 'IJT', 'Alibaba', 'PDBC', 'Hub Group', 'PFF', 'BSJO', 'VWBO', 'Stericycle']
+RANDOM_STOCKS = ['AAPL', 'COST', 'UTHR', 'LBTYK', 'SBUX', 'TXN', 'ERIC', 'DGRW', 'FMB', 'THRM',
+                 'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'ASML', 'MEDP', 'GRMN', 'PIE', 'NFLX',
+                 'TACO', 'HOFT', 'ULCC', 'BABA', 'PDBC', 'HUBG', 'JBSS', 'FROG', 'DOYU', 'SRCL']
+random_kw_list = ['Apple', 'Costco', 'United Therapeutics', 'Liberty Global', 'Starbucks', 'Texas Instruments', 'Ericsson', 'WisdomTree', 'FMB', 'Gentherm',
+                  'OpenText', 'iShares Biotechnology', 'IUSG', 'Broadcom', 'Hurco', 'asml', 'Medpace', 'Garmin', 'PIE', 'Netflix',
+                  'Del Taco Restaurants', 'Hooker Furniture', 'Frontier Group Holdings', 'Alibaba', 'PDBC', 'Hub Group', 'John B. Sanfilippo & Son', 'JFrog', 'DouYu', 'Stericycle']
 
 
-RANDOM_STOCKS = ['TACO', 'HOFT', 'ULCC', 'BABA', 'PDBC', 'HUBG', 'JBSS', 'FROG', 'DOYU', 'SRCL']
-random_kw_list = ['Del Taco Restaurants', 'Hooker Furniture', 'Frontier Group Holdings', 'Alibaba', 'PDBC', 'Hub Group', 'John B. Sanfilippo & Son', 'JFrog', 'DouYu', 'Stericycle']
+# RANDOM_STOCKS = ['TACO', 'HOFT', 'ULCC', 'BABA', 'PDBC', 'HUBG', 'JBSS', 'FROG', 'DOYU', 'SRCL']
+# random_kw_list = ['Del Taco Restaurants', 'Hooker Furniture', 'Frontier Group Holdings', 'Alibaba', 'PDBC', 'Hub Group', 'John B. Sanfilippo & Son', 'JFrog', 'DouYu', 'Stericycle']
+
 
 # prepare objects lit
 momentum_portfolio_ticker_objects = [yf.Ticker(s) for s in MOMENTUM_PORTFOLIO]
 contrarian_portfolio_ticker_objects = [yf.Ticker(s) for s in CONTRARIAN_PORTFOLIO]
+mix_portfolio_ticker_objects = [yf.Ticker(s) for s in MIX_PORTFOLIO]
+
 random_stocks_ticker_objects = [yf.Ticker(s) for s in RANDOM_STOCKS]
 
 
 # ##### company basic information #####
 
 
-def get_stock_info(stocks, ticker_list, folder_name='random_stocks_data'):
+def get_stock_info(stocks, ticker_list, folder_name):
     for i, t in enumerate(ticker_list):
         with open(f'../trading_strategy_data/{folder_name}/{stocks[i]}_info.json', 'w') as fp:
             json.dump(t.info, fp)
@@ -85,7 +91,7 @@ def get_stock_info(stocks, ticker_list, folder_name='random_stocks_data'):
 # Open, High, Low, Volume, Dividends, Stock Splits
 
 
-def get_daily_price_data(stocks, ticker_list, folder_name='random_stocks_data'):
+def get_daily_price_data(stocks, ticker_list, folder_name):
 
     for i, t in enumerate(ticker_list):
         current_t_history = t.history(period='1d',
@@ -94,7 +100,7 @@ def get_daily_price_data(stocks, ticker_list, folder_name='random_stocks_data'):
 
         # save as csv
         current_t_history.to_csv(f'../trading_strategy_data/{folder_name}/'
-                                 f'{stocks[i]}_daily_price_data.csv')
+                                 f'{stocks[i]}_daily_price_data.csv', index=False)
         print(f'========== {stocks[i]} daily price saved! ==========')
 
 
@@ -105,8 +111,6 @@ def truncate_by_date(result_dict, ta_name, start=START_DATE, end=END_DATE):
     """
     Only keep the required timeframe.
     """
-
-    print(result_dict)
 
     result_dict = result_dict[f'Technical Analysis: {ta_name}']
     date_ta_dict = {date.fromisoformat(d): v for d, v in result_dict.items()
@@ -137,7 +141,7 @@ def add_polarize(df, col_name):
     return df
 
 
-def get_TA_features_with_extension(stock_ticker, ta_function_list, folder_name='random_stocks_data'):
+def get_TA_features_with_extension(stock_ticker, ta_function_list, folder_name):
     """
     Get all TA indicators and proper extension of each indicator.
     Extensions are inspired by existing paper and investpedia.
@@ -329,14 +333,13 @@ def get_TA_features_with_extension(stock_ticker, ta_function_list, folder_name='
     return all_TA_df
 
 
-def get_google_trend_data(ticker, keyword, start=START_DATE, end=END_DATE, folder_name='random_stocks_data'):
+def get_google_trend_data(ticker, keyword, folder_name, start=START_DATE, end=END_DATE):
 
     daily_df = dailydata.get_daily_data(word=keyword,
                                         start_year=start.year, start_mon=start.month,
                                         stop_year=end.year, stop_mon=end.month,
                                         geo=''
                                         )
-    print(daily_df.head())
 
     daily_df = daily_df.reset_index()
     daily_df = daily_df.iloc[:, 0:2]
@@ -376,6 +379,11 @@ def get_google_portfolio(select_strategy):
             get_google_trend_data(CONTRARIAN_PORTFOLIO[i], contrarian_portfolio_kw_list[i],
                                   folder_name='portfolio_data/contrarian')
 
+    elif select_strategy == 'mix':
+        for i in range(10):
+            get_google_trend_data(MIX_PORTFOLIO[i], mix_portfolio_kw_list[i],
+                                  folder_name='portfolio_data/mix')
+
     return True
 
 
@@ -387,13 +395,20 @@ def get_google_random_stocks():
 
 if __name__ == "__main__":
 
+    # get_data(MIX_PORTFOLIO, mix_portfolio_ticker_objects, 'portfolio_data/mix')
+    get_google_portfolio('mix')
+    print('----- MIX done -----')
+
     # get_data(MOMENTUM_PORTFOLIO, momentum_portfolio_ticker_objects, 'portfolio_data/momentum')
     # get_google_portfolio('momentum')
+    # print('----- Momentum done -----')
     #
     # get_data(CONTRARIAN_PORTFOLIO, contrarian_portfolio_ticker_objects, 'portfolio_data/contrarian')
     # get_google_portfolio('contrarian')
+    # print('----- Contrarian done -----')
 
-    get_data(RANDOM_STOCKS, random_stocks_ticker_objects, 'random_stocks_data')
-    get_google_random_stocks()
+    # get_data(RANDOM_STOCKS, random_stocks_ticker_objects, 'random_stocks_data')
+    # get_google_random_stocks()
+    # print('----- Random Stocks done -----')
 
 

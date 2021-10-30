@@ -43,11 +43,14 @@ def RFE(stock):
 def RFE_voting():
 
     feature_ranking_list = []
-    aggregate_ranking = defaultdict(lambda: (0, 0))   # (number of voters, total score)
+    aggregate_ranking = defaultdict(lambda: [0, 0])   # (number of voters, total score)
 
     # RFE for feature selection
     for stock in crawler.RANDOM_STOCKS:
+        print('~~~~~' + stock + '~~~~~')
         ranking = RFE(stock)
+        print('Ranking')
+        print(ranking)
         feature_ranking_list.append(ranking)
 
     # TODO: Plot feature ranking for 30 stocks
@@ -55,7 +58,7 @@ def RFE_voting():
     for rank_list in feature_ranking_list:
         for i, f in enumerate(rank_list):
             aggregate_ranking[f][0] += 1
-            aggregate_ranking[f][1] += (i + 1)
+            aggregate_ranking[f][1] += i  # use i as score
 
     sort_f_dict = sorted(aggregate_ranking.items(), key=lambda x: x[1][1] / x[1][0])
     average_score = [v[1] / v[0] for _, v in sort_f_dict]
@@ -63,26 +66,42 @@ def RFE_voting():
     feature_ticks = [f[0] + ' ' + str(i) for i, f in enumerate(sort_f_dict)]
 
     # plot ranking information
-    plt.figure(figsize=(14, 12))
+    plt.figure(figsize=(20, 10))
     plt.plot(average_score, linestyle='--', marker='o')
 
+    # plot ranking for each stock
+    scatter_list = []
+    for i, feature_ranking_str in enumerate(feature_ranking_list):
+        feature_ranking_ind = [feature_ranking_str.index(sf) for sf in sorted_features]
+        scatter_plot = plt.scatter(x=range(len(feature_ranking_ind)), y=feature_ranking_ind, alpha=0.5, marker='^', s=14)
+        scatter_list.append(scatter_plot)
+    plt.legend(scatter_list,
+               crawler.RANDOM_STOCKS,
+               loc='center left',
+               bbox_to_anchor=(1.0, 0.5)
+               )
+
     plt.xticks(list(range(len(feature_ticks))), feature_ticks, rotation=90, fontsize=8)
-    plt.xlabel('Feature rank')
+    plt.xlabel('Features')
     plt.ylabel('Rank Score')
     plt.title('Feature Ranking Score', fontsize=18)
+    # plt.show()
     plt.savefig('../trading_strategy_figure/RFE/feature_rank_score.jpeg', bbox_inches='tight')
 
-    selected_features = sorted_features[:43]
-    with open("../trading_strategy_figure/rfe_selected_features.txt", 'w') as file:
+    # Save first 40 selected features
+    selected_features = sorted_features[:40]
+    print(selected_features)
+    with open("../trading_strategy_figure/RFE/rfe_selected_features.txt", 'w') as file:
         s = ",".join(selected_features)
         file.write(s)
+
     return selected_features
 
 
 def preprocessing(select_strategy, folder_name):
 
     # get RFE selected features
-    with open('../trading_strategy_figure/rfe_selected_features.txt') as f:
+    with open('../trading_strategy_figure/RFE/rfe_selected_features.txt') as f:
         line = f.read()
 
     features = line.split(',')
@@ -98,20 +117,23 @@ def preprocessing(select_strategy, folder_name):
         print(f'=========={stock}===========')
         df = pd.read_csv(f'../trading_strategy_data/{folder_name}/{stock}_combined_data.csv')
 
+        # ############## RFE ################
         rfe_df = df[features]
         rfe_df = pd.concat([df[['Ticker', 'Date']], rfe_df], axis=1)
         rfe_df.to_csv(f'../trading_strategy_data/{folder_name}/{stock}_rfe_data.csv', index=False)
+        print(f'~~~~~ {stock} RFE data saved ! ~~~~~')
 
+        # ############## PCA ################
         # keep close price
         Y = df['Close'].copy()
-
         # get selected columns
         X = np.array(df[features])
         # min max transformation
         scaler = MinMaxScaler()
         X = scaler.fit_transform(X)
         # PCA
-        pca = PCA(n_components=10)
+        # pca = PCA()
+        pca = PCA(n_components=10)  # 10 PCs keep 90% variance
         pca_X = pca.fit_transform(X)
 
         col_names = []
@@ -120,23 +142,34 @@ def preprocessing(select_strategy, folder_name):
 
         pca_df = pd.DataFrame(pca_X, columns=col_names)
         pca_df = pd.concat([df[['Ticker', 'Date']], pca_df, Y], axis=1)
-        pca_df.to_csv(f'../trading_strategy_data/portfolio_data/{stock}_pca_data.csv', index=False)
+        pca_df.to_csv(f'../trading_strategy_data/{folder_name}/{stock}_pca_data.csv', index=False)
+        print(f' $$$$$ {stock} PCA data saved ! $$$$$')
 
-        # plot PCA ratio
-        plt.figure(figsize=(10, 8))
-        plt.plot(pca.explained_variance_ratio_, linestyle='--', marker='o')
-        plt.xlabel('PC')
-        plt.ylabel('Percentage of variance explained')
-        plt.title(f'{stock}: PC explained variance plot')
-        plt.savefig(f'../trading_strategy_figure/PCA/PCA_{stock}.jpeg', bbox_inches='tight')
+        # ############## PLOT ################
+
+        # # plot PCA ratio
+        # plt.figure(figsize=(10, 8))
+        # plt.plot(pca.explained_variance_ratio_, linestyle='--', marker='o')
+        # plt.xlabel('PC')
+        # plt.ylabel('Percentage of variance explained')
+        # plt.title(f'{stock}: PC explained variance plot')
+        # plt.savefig(f'../trading_strategy_figure/PCA/{select_strategy}/PCA_{stock}.jpeg', bbox_inches='tight')
+        # # plt.show()
+        # print(f' $$$$$ {stock} PCA ratio plot figure saved ! $$$$$')
+
+        return True
 
 
 if __name__ == "__main__":
 
     # rfe_result = RFE_voting()
 
-    preprocessing('momentum', 'portfolio_data/momentum')
-    preprocessing('contrarian', 'portfolio_data/contrarian')
+
+    preprocessing('mix', 'portfolio_data/mix')
+
+    # preprocessing('momentum', 'portfolio_data/momentum')
+    # preprocessing('contrarian', 'portfolio_data/contrarian')
+
 
 
 

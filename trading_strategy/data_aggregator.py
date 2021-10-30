@@ -27,7 +27,6 @@ def get_pandemic_data():
     # Change date format
     us_case_df['Date'] = pd.to_datetime(us_case_df.Date)
     us_death_df['Date'] = pd.to_datetime(us_death_df.Date)
-    # us_vaccination_df['Date'] = pd.to_datetime(us_vaccination_df.Date)
 
     return [us_case_df, us_death_df]
 
@@ -36,6 +35,7 @@ def aggregate_data(stock_ticker, folder_name):
 
     # ###### load daily price data ######
     price_df = pd.read_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_daily_price_data.csv')
+
     price_df['Date'] = pd.to_datetime(price_df['Date'])
 
     # add price change and change percentage features
@@ -76,8 +76,8 @@ def aggregate_data(stock_ticker, folder_name):
     combined_df = combined_df[~((combined_df['Date'] < covid_start_date) |
                                 (combined_df['Date'] > validation_period_stop_date))]
 
-    # combined_df = combined_df.replace([np.inf, -np.inf], 0)
-    # combined_df = combined_df.fillna(0)
+    combined_df = combined_df.replace({np.inf: 1, -np.inf: -1})
+    combined_df = combined_df.fillna(0)
 
     combined_df.to_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_combined_data.csv', index=False)
 
@@ -88,11 +88,19 @@ def aggregate_data(stock_ticker, folder_name):
 
 if __name__ == "__main__":
 
-    for stock in crawler.MOMENTUM_PORTFOLIO:
-        aggregate_data(stock, folder_name='portfolio_data/momentum')
+    for stock in crawler.MIX_PORTFOLIO:
+        aggregate_data(stock, folder_name='portfolio_data/mix')
+    print()
+    print('====== MIX aggregation done ! =====')
 
-    for stock in crawler.CONTRARIAN_PORTFOLIO:
-        aggregate_data(stock, folder_name='portfolio_data/contrarian')
-
-    for stock in crawler.RANDOM_STOCKS:
-        aggregate_data(stock, folder_name='random_stocks_data')
+    # for stock in crawler.MOMENTUM_PORTFOLIO:
+    #     aggregate_data(stock, folder_name='portfolio_data/momentum')
+    # print('====== Momentum aggregation done ! =====')
+    #
+    # for stock in crawler.CONTRARIAN_PORTFOLIO:
+    #     aggregate_data(stock, folder_name='portfolio_data/contrarian')
+    # print('====== Contrarian aggregation done ! =====')
+    #
+    # for stock in crawler.RANDOM_STOCKS:
+    #     aggregate_data(stock, folder_name='random_stocks_data')
+    # print('====== Random stock aggregation done ! =====')
