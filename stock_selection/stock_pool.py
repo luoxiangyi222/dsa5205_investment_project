@@ -19,33 +19,49 @@ import quandl
 
 # get data from yahoo finance
 # from 2020-1-1 to 2021-7-31
-tickers = []
-with open('./data/stock_list.txt') as file:
-    for line in file:
-        tickers.append(line.rstrip())
-
+# tickers = []
+# with open('./data/stock_list.txt') as file:
+#     for line in file:
+#         tickers.append(line.rstrip())
+tickers = si.tickers_nasdaq()
 # tickers = ["FB", "AMZN", "AAPL", "NFLX", "GOOG"]
 # price_data = {ticker: si.get_data(ticker, start_date="2020-01-01", end_date="2021-07-31") for ticker in tickers}
 i = 0
 price_data = {}
 temp = []
 na = []
+counter = 0
 for ticker in tickers:
     try:
         print(ticker)
         dat = si.get_data(ticker, start_date="2020-01-01", end_date="2021-07-31")
         temp.append(ticker)
-    except (AssertionError, KeyError):
+    except (AssertionError, KeyError, TypeError):
         i = i+1
-        print(ticker+" fails " + str(i) +" out of 2275")
+        print(ticker+" fails " + str(i) +" out of "+ str(len(tickers)))
         na.append(ticker)
         continue
     price_data[ticker] = dat
-tickers = temp
-combined = reduce(lambda x, y: x.append(y), price_data.values())
+    counter += 1
+    if counter%100 == 0:
+        print("-" * 80)
+        print("{} out of {} is done\n".format(counter, len(tickers)))
+        print("-" * 80)
+ticker_lst = temp
 
+combined = reduce(lambda x, y: x.append(y), price_data.values())
 combined['intraday'] = (combined['close'] - combined['open']) / combined['open']
 
+remove = []
+counting = combined['ticker'].value_counts()
+for t in combined['ticker'].unique():
+    if counting[t] < 398:
+        remove.append(t)
+print(remove)
+tickers = [x for x in ticker_lst if x not in remove]
+print(tickers)
+
+combined = combined[combined['ticker'].isin(ticker_lst)]
 # calculate stock returns
 data_raw = combined[['ticker', 'adjclose']]
 
@@ -56,7 +72,19 @@ data.columns = [col[1] for col in data.columns.values]
 print(data)
 stock_data = combined[combined['ticker'].isin(tickers)]
 print(stock_data)
-stock_data.to_csv('stock_pool_init.csv', index=True)
+stock_data.to_csv('./data/stock_pool_init.csv', index=True)
+# or directly load the data from existing list
+# combined = pd.read_csv('./data/stock_pool_init.csv', index_col= 0)
+# print(combined)
+# combined['time'] = pd.Index(pd.to_datetime(combined.index))
+# combined = combined.set_index('time')
+# tickers = combined['ticker'].unique()
+
+data_raw = combined[['ticker', 'adjclose']]
+
+data = data_raw.pivot_table(index=data_raw.index, columns='ticker', values=['adjclose'])
+# flatten columns multi-index, `date` will become the dataframe index
+data.columns = [col[1] for col in data.columns.values]
 #############################################
 # Calculate Maximum Daily Dropdown and Increase for each stocks
 # Filter out Stocks that Have Maximum Drawdown > 20%
@@ -109,10 +137,10 @@ data = data[tickers]
 
 # save ticker for stocks that are in stock pool
 with open('./data/stock_pool.txt', 'w') as f:
-    for item in tickers:
+    for item in ticker_lst:
         f.write("%s\n" % item)
 
 # save the data for all these stocks
-stock_data = combined[combined['ticker'].isin(tickers)]
+stock_data = combined[combined['ticker'].isin(ticker_lst)]
 print(stock_data)
 stock_data.to_csv('./data/stock_pool_data.csv', index=True)

@@ -11,6 +11,7 @@ import math
 import csv
 import itertools
 import quandl
+from dateutil.relativedelta import relativedelta
 
 #######################################################
 # Stock Selection based on P/E and P/B
@@ -55,6 +56,10 @@ with open('./data/momentum_portfolio.txt', 'w') as f:
     for item in momentum_portfolio:
         f.write("%s\n" % item)
 
+with open('./data/mixed_portfolio.txt', 'w') as f:
+    for item in mix_portfolio:
+        f.write("%s\n" % item)
+
 #######################################################
 # Diversification of Potential Portfolios
 # definition of normalized portfolio covariance of
@@ -65,7 +70,6 @@ with open('./data/momentum_portfolio.txt', 'w') as f:
 #######################################################
 # calculate normalized portfolio covariance
 # less is better
-# or directly load data
 combined = pd.read_csv('./data/stock_pool_data.csv', index_col= 0)
 combined['time'] = pd.Index(pd.to_datetime(combined.index))
 combined = combined.set_index('time')
@@ -79,18 +83,37 @@ data.columns = [col[1] for col in data.columns.values]
 daily_stock_return = data.pct_change()
 
 
-def normalized_portfolio_covariance(portfolio):
-    daily = daily_stock_return[daily_stock_return.index > datetime(2021, 1, 31)]
+def normalized_portfolio_covariance(portfolio, period):
+    month = relativedelta(months=period)
+    start = datetime(2020, 7, 31) - month
+    daily = daily_stock_return[daily_stock_return.index > start]
     data = daily[portfolio]
     correlation_matrix = data.corr()
     avg_corr = sum(sum(np.triu(correlation_matrix.values)))/sum(range(len(portfolio)+1))
     return 1/len(portfolio) + avg_corr * (len(portfolio)-1)/len(portfolio)
 
 
-print(normalized_portfolio_covariance(contrarian_portfolio))
-print(normalized_portfolio_covariance(momentum_portfolio))
-print(normalized_portfolio_covariance(mix_portfolio))
-
-
-
-
+normalized_cov_time = pd.DataFrame()
+duration = [3, 6, 12, 18]
+for n in duration:
+    # print("-" * 80)
+    # print("normalized portfolio covariance for contrarian: {} for using {} month past data"
+    #       .format(normalized_portfolio_covariance(contrarian_portfolio, n), n))
+    # print("normalized portfolio covariance for momentum: {} for using {} month past data"
+    #       .format(normalized_portfolio_covariance(momentum_portfolio, n), n))
+    # print("normalized portfolio covariance for mixed: {} for using {} month past data"
+    #       .format(normalized_portfolio_covariance(mix_portfolio, n), n))
+    temp = [normalized_portfolio_covariance(contrarian_portfolio, n),
+            normalized_portfolio_covariance(momentum_portfolio, n),
+            normalized_portfolio_covariance(mix_portfolio, n)]
+    df = pd.DataFrame(temp, index=['contrarian', 'momentum', 'mix'], columns=['{} month'.format(n)])
+    normalized_cov_time = normalized_cov_time.append(df.T, ignore_index=False)
+print(normalized_cov_time)
+from matplotlib import pyplot as plt
+plt.rcParams["figure.figsize"] = [10, 6]
+normalized_cov_time.plot(kind="bar", rot=0, color=['lightsalmon', 'coral', 'peru'])
+plt.title("Normalized Portfolio Covariance calculated across Various Time Scale")
+plt.xlabel("Number of Months")
+plt.ylabel("Portfolio Covariance")
+plt.savefig('./data/portfolio_covariance.jpg')
+plt.show()
