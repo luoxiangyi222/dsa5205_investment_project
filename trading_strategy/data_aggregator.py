@@ -35,7 +35,7 @@ def aggregate_data(stock_ticker, folder_name):
 
     # ###### load daily price data ######
     price_df = pd.read_csv(f'../trading_strategy_data/{folder_name}/{stock_ticker}_daily_price_data.csv')
-
+    print(price_df.head())
     price_df['Date'] = pd.to_datetime(price_df['Date'])
 
     # add price change and change percentage features
@@ -93,14 +93,20 @@ if __name__ == "__main__":
     print()
     print('====== MIX aggregation done ! =====')
 
+
     # for stock in crawler.MOMENTUM_PORTFOLIO:
     #     aggregate_data(stock, folder_name='portfolio_data/momentum')
     # print('====== Momentum aggregation done ! =====')
+
+
+
     #
     # for stock in crawler.CONTRARIAN_PORTFOLIO:
     #     aggregate_data(stock, folder_name='portfolio_data/contrarian')
     # print('====== Contrarian aggregation done ! =====')
     #
+
+
     # for stock in crawler.RANDOM_STOCKS:
     #     aggregate_data(stock, folder_name='random_stocks_data')
     # print('====== Random stock aggregation done ! =====')
