@@ -370,9 +370,9 @@ def get_data(stocks, yf_objects, folder):
     get_daily_price_data(stocks, yf_objects, folder_name=folder)
 
     # TA data
-    # ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
-    # for ticker in stocks:
-    #     get_TA_features_with_extension(ticker, ta_list, folder_name=folder)
+    ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
+    for ticker in stocks:
+        get_TA_features_with_extension(ticker, ta_list, folder_name=folder)
 
     print('=====++++++++++ Portfolio Data Crawling finished ++++++++++======')
 
