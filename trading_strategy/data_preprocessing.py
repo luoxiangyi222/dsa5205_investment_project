@@ -204,9 +204,9 @@ def preprocessing(select_strategy, folder_name):
 
 if __name__ == "__main__":
 
-    rfe_result = RFE_voting()
+    # rfe_result = RFE_voting()
 
-    # preprocessing('mix', 'portfolio_data/mix')
+    preprocessing('mix', 'portfolio_data/mix')
     # preprocessing('momentum', 'portfolio_data/momentum')
     # preprocessing('contrarian', 'portfolio_data/contrarian')
 

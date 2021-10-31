@@ -53,11 +53,11 @@ contrarian_portfolio_kw_list = ['Preformed Line Products', 'B Riley Financial', 
 
 MIX_PORTFOLIO = [ 'JCTCF', 'GCBC', 'MCBS', 'CSWC', 'EXC',
                   'ULH', 'LYTS', 'WABC', 'WVVI', 'FSLR']
-mix_portfolio_kw_list = ['Jewett-Cameron', 'Bank of Greene County', 'Metro City Bank', 'Capital Southwest', 'Exelon',
+mix_portfolio_kw_list = ['JCTCF', 'Bank of Greene County', 'Metro City Bank', 'Capital Southwest', 'Exelon',
                          'Universal Logistics', 'LSI Industries', 'Westamerica', 'Willamette Valley Vineyards', 'First Solar' ]
 
-# MIX_PORTFOLIO = ['RNDB']
-# mix_portfolio_kw_list = ['RNDB']
+# MIX_PORTFOLIO = ['JCTCF']
+# mix_portfolio_kw_list = ['JCTCF']
 
 
 # Randomly selected stocks for RFE
@@ -138,7 +138,7 @@ def add_min_max_scaling(df, col_name):
 
 
 def add_fluctuation_percentage(df, col_name):
-    df[col_name + '_fluc_pctg'] = (df[col_name] - df[col_name].shift(periods=1)) / df[col_name].shift(periods=1)
+    df[col_name + '_fluc_pctg'] = (df[col_name] - df[col_name].shift(periods=1)) / abs(df[col_name].shift(periods=1))
     return df
 
 
@@ -381,17 +381,17 @@ def get_google_portfolio(select_strategy):
 
     # Google daily trend volume index data
     if select_strategy == 'momentum':
-        for i in range(10):
+        for i in range(len(MOMENTUM_PORTFOLIO)):
             get_google_trend_data(MOMENTUM_PORTFOLIO[i], momentum_portfolio_kw_list[i],
                                   folder_name='portfolio_data/momentum')
 
     elif select_strategy == 'contrarian':
-        for i in range(10):
+        for i in range(len(CONTRARIAN_PORTFOLIO)):
             get_google_trend_data(CONTRARIAN_PORTFOLIO[i], contrarian_portfolio_kw_list[i],
                                   folder_name='portfolio_data/contrarian')
 
     elif select_strategy == 'mix':
-        for i in range(10):
+        for i in range(len(MIX_PORTFOLIO)):
             get_google_trend_data(MIX_PORTFOLIO[i], mix_portfolio_kw_list[i],
                                   folder_name='portfolio_data/mix')
 
@@ -400,7 +400,7 @@ def get_google_portfolio(select_strategy):
 
 def get_google_random_stocks():
     # Google daily trend volume index data
-    for i in range(30):
+    for i in range(len(RANDOM_STOCKS)):
         get_google_trend_data(RANDOM_STOCKS[i], random_kw_list[i], folder_name='random_stocks_data')
 
 
@@ -440,8 +440,21 @@ if __name__ == "__main__":
 
     # etf_filter()
 
-    get_data(MIX_PORTFOLIO, mix_portfolio_ticker_objects, 'portfolio_data/mix')
-    get_google_portfolio('mix')
+    # get_data(MIX_PORTFOLIO, mix_portfolio_ticker_objects, 'portfolio_data/mix')
+    # get_google_portfolio('mix')
+
+    for stock in MIX_PORTFOLIO:
+        ta_df = pd.read_csv(f'../trading_strategy_data/portfolio_data/mix/{stock}_TA_indicators.csv')
+        ta_df = add_fluctuation_percentage(ta_df, 'SMA_10')
+        ta_df = add_fluctuation_percentage(ta_df, 'ROC_10')
+        ta_df = add_fluctuation_percentage(ta_df, 'RSI_5')
+        ta_df = add_fluctuation_percentage(ta_df, 'STOCH_SlowD')
+        ta_df = add_fluctuation_percentage(ta_df, 'STOCH_SlowK')
+        ta_df = add_fluctuation_percentage(ta_df, 'ADX')
+        ta_df = add_fluctuation_percentage(ta_df, 'Chaikin_AD')
+
+        ta_df.to_csv(f'../trading_strategy_data/portfolio_data/mix/{stock}_TA_indicators.csv', index=False)
+
     print('----- MIX done -----')
 
     # get_data(MOMENTUM_PORTFOLIO, momentum_portfolio_ticker_objects, 'portfolio_data/momentum')
@@ -452,8 +465,22 @@ if __name__ == "__main__":
     # get_google_portfolio('contrarian')
     # print('----- Contrarian done -----')
 
-    get_data(RANDOM_STOCKS, random_stocks_ticker_objects, 'random_stocks_data')
-    get_google_random_stocks()
-    print('----- Random Stocks done -----')
+    # get_data(RANDOM_STOCKS, random_stocks_ticker_objects, 'random_stocks_data')
+    # get_google_random_stocks()
+    # print('----- Random Stocks done -----')
+
+    for stock in RANDOM_STOCKS:
+        ta_df = pd.read_csv(f'../trading_strategy_data/random_stocks_data/{stock}_TA_indicators.csv')
+        ta_df = add_fluctuation_percentage(ta_df, 'SMA_10')
+        ta_df = add_fluctuation_percentage(ta_df, 'ROC_10')
+        ta_df = add_fluctuation_percentage(ta_df, 'RSI_5')
+        ta_df = add_fluctuation_percentage(ta_df, 'STOCH_SlowD')
+        ta_df = add_fluctuation_percentage(ta_df, 'STOCH_SlowK')
+        ta_df = add_fluctuation_percentage(ta_df, 'ADX')
+        ta_df = add_fluctuation_percentage(ta_df, 'Chaikin_AD')
+
+        ta_df.to_csv(f'../trading_strategy_data/random_stocks_data/{stock}_TA_indicators.csv', index=False)
+
+    print('----- Random done -----')
 
 
