@@ -55,8 +55,8 @@ MIX_PORTFOLIO = ['SAGE', 'FSFG', 'RNDB', 'OPRA', 'LARK', 'CFFI', 'UBOH', 'ANTE',
 mix_portfolio_kw_list = ['SAGE Therapeutics', 'First Savings Financial', 'RNDB', 'Opera Limited', 'stock LARK',
                          'C&F Financial','United Bancshares', 'Airnet Technology','HMNF', 'Meridian']
 
-MIX_PORTFOLIO = ['RNDB']
-mix_portfolio_kw_list = ['RNDB']
+# MIX_PORTFOLIO = ['RNDB']
+# mix_portfolio_kw_list = ['RNDB']
 
 
 # Randomly selected stocks for RFE
@@ -103,7 +103,7 @@ def get_daily_price_data(stocks, ticker_list, folder_name):
 
         # save as csv
         current_t_history.to_csv(f'../trading_strategy_data/{folder_name}/'
-                                 f'{stocks[i]}_daily_price_data.csv', index=False)
+                                 f'{stocks[i]}_daily_price_data.csv')
         print(f'========== {stocks[i]} daily price saved! ==========')
 
 
@@ -362,9 +362,9 @@ def get_data(stocks, yf_objects, folder):
     get_daily_price_data(stocks, yf_objects, folder_name=folder)
 
     # TA data
-    ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
-    for ticker in stocks:
-        get_TA_features_with_extension(ticker, ta_list, folder_name=folder)
+    # ta_list = ['SMA', 'MACD', 'CCI', 'ROC', 'RSI', 'STOCH', 'ADX', 'AROON', 'BBANDS', 'AD']
+    # for ticker in stocks:
+    #     get_TA_features_with_extension(ticker, ta_list, folder_name=folder)
 
     print('=====++++++++++ Portfolio Data Crawling finished ++++++++++======')
 
@@ -396,9 +396,43 @@ def get_google_random_stocks():
         get_google_trend_data(RANDOM_STOCKS[i], random_kw_list[i], folder_name='random_stocks_data')
 
 
+def etf_filter():
+
+    with open('../trading_strategy_data/random_stocks_data/stock_pool.txt') as f:
+        lines = f.readlines()
+
+    lines = [word.strip() for word in lines]
+    yf_objects = [yf.Ticker(s) for s in lines]
+
+    equity_list = []
+
+    for i in range(len(yf_objects)):
+
+        print(f'~~~~~~{i}~~~~~~')
+        print(lines[i])
+        try:
+            if yf_objects[i].info['quoteType'] == 'EQUITY':
+                equity_list.append(lines[i])
+        except KeyError:
+            continue
+
+    print(len(lines))
+    print(len(equity_list))
+
+    with open('../trading_strategy_data/random_stocks_data/equity_pool.txt', 'w') as f:
+        for item in equity_list:
+            f.write(f'{item}\n')
+
+
+    print('========== Equity Saved !!! ==========')
+
+
+
 if __name__ == "__main__":
 
-    # get_data(MIX_PORTFOLIO, mix_portfolio_ticker_objects, 'portfolio_data/mix')
+    # etf_filter()
+
+    get_data(MIX_PORTFOLIO, mix_portfolio_ticker_objects, 'portfolio_data/mix')
     get_google_portfolio('mix')
     print('----- MIX done -----')
 

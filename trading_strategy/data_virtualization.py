@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # ########## correlation heatmap ##########
 
     for stock in crawler.MIX_PORTFOLIO:
-        df = pd.read_csv(f'../trading_strategy_data/portfolio_data/momentum/{stock}_combined_data.csv')
+        df = pd.read_csv(f'../trading_strategy_data/portfolio_data/mix/{stock}_combined_data.csv')
         show_correlation_heatmap(df, stock)
         print(f'===== {stock} correlation heatmap saved ! =====')
 
