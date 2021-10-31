@@ -51,22 +51,30 @@ contrarian_portfolio_kw_list = ['Preformed Line Products', 'B Riley Financial', 
                                 'Willamette Valley Vineyards', 'LGI Homes', 'Encore Wire', 'Silgan Holdings',
                                 'Artesian Resources']
 
-MIX_PORTFOLIO = ['SAGE', 'FSFG', 'RNDB', 'OPRA', 'LARK', 'CFFI', 'UBOH', 'ANTE', 'HMNF', 'MRBK']
-mix_portfolio_kw_list = ['SAGE Therapeutics', 'First Savings Financial', 'RNDB', 'Opera Limited', 'stock LARK',
-                         'C&F Financial','United Bancshares', 'Airnet Technology','HMNF', 'Meridian']
+MIX_PORTFOLIO = [ 'JCTCF', 'GCBC', 'MCBS', 'CSWC', 'EXC',
+                  'ULH', 'LYTS', 'WABC', 'WVVI', 'FSLR']
+mix_portfolio_kw_list = ['Jewett-Cameron', 'Bank of Greene County', 'Metro City Bank', 'Capital Southwest', 'Exelon',
+                         'Universal Logistics', 'LSI Industries', 'Westamerica', 'Willamette Valley Vineyards', 'First Solar' ]
 
 # MIX_PORTFOLIO = ['RNDB']
 # mix_portfolio_kw_list = ['RNDB']
 
 
 # Randomly selected stocks for RFE
-RANDOM_STOCKS = ['AAPL', 'COST', 'UTHR', 'LBTYK', 'SBUX', 'TXN', 'ERIC', 'DGRW', 'FMB', 'THRM',
-                 'OTEX', 'IBB', 'IUSG', 'AVGO', 'HURC', 'ASML', 'MEDP', 'GRMN', 'PIE', 'NFLX',
-                 'TACO', 'HOFT', 'ULCC', 'BABA', 'PDBC', 'HUBG', 'JBSS', 'FROG', 'DOYU', 'SRCL']
-random_kw_list = ['Apple', 'Costco', 'United Therapeutics', 'Liberty Global', 'Starbucks', 'Texas Instruments', 'Ericsson', 'WisdomTree', 'FMB', 'Gentherm',
-                  'OpenText', 'iShares Biotechnology', 'IUSG', 'Broadcom', 'Hurco', 'asml', 'Medpace', 'Garmin', 'PIE', 'Netflix',
-                  'Del Taco Restaurants', 'Hooker Furniture', 'Frontier Group Holdings', 'Alibaba', 'PDBC', 'Hub Group', 'John B. Sanfilippo & Son', 'JFrog', 'DouYu', 'Stericycle']
-
+RANDOM_STOCKS = ['AMZN', 'AAPL', 'ASML', 'BIDU', 'COST',
+                 'DXCM', 'DLTR', 'EBAY', 'FAST', 'INTC',
+                 'MRVL', 'JD', 'KLAC', 'LULU', 'MELI',
+                 'MRNA', 'MNST', 'MSFT', 'NFLX', 'NTES',
+                 'NVDA', 'OKTA', 'PYPL', 'QCOM', 'SGEN',
+                 'SBUX', 'TCOM', 'TSLA', 'TXN', 'ZM'
+                 ]
+random_kw_list = ['Amazon', 'Apple', 'ASML', 'Baidu', 'Costco',
+                  'Dexcom', 'Dollar Tree', 'eBay', 'Fastenal', 'Intel',
+                  'Marvell Technology', 'JD.com', 'KLA Corp', 'Lululemon', 'Mercadolibre',
+                  'Moderna', 'Monster Beverage', 'Microsoft', 'Netflix', 'NetEase',
+                  'NVIDIA', 'Okta', 'PayPal', 'Qualcomm', 'Seagen',
+                  'Starbucks', 'Trip.com', 'Tesla', 'Texas Instruments', 'Zoom'
+                  ]
 
 # RANDOM_STOCKS = ['TACO', 'HOFT', 'ULCC', 'BABA', 'PDBC', 'HUBG', 'JBSS', 'FROG', 'DOYU', 'SRCL']
 # random_kw_list = ['Del Taco Restaurants', 'Hooker Furniture', 'Frontier Group Holdings', 'Alibaba', 'PDBC', 'Hub Group', 'John B. Sanfilippo & Son', 'JFrog', 'DouYu', 'Stericycle']
@@ -419,7 +427,7 @@ def etf_filter():
     print(len(lines))
     print(len(equity_list))
 
-    with open('../trading_strategy_data/random_stocks_data/equity_pool.txt', 'w') as f:
+    with open('../trading_strategy_data/random_stocks_data/equity_pool/equity_pool.txt', 'w') as f:
         for item in equity_list:
             f.write(f'{item}\n')
 
@@ -444,8 +452,8 @@ if __name__ == "__main__":
     # get_google_portfolio('contrarian')
     # print('----- Contrarian done -----')
 
-    # get_data(RANDOM_STOCKS, random_stocks_ticker_objects, 'random_stocks_data')
-    # get_google_random_stocks()
-    # print('----- Random Stocks done -----')
+    get_data(RANDOM_STOCKS, random_stocks_ticker_objects, 'random_stocks_data')
+    get_google_random_stocks()
+    print('----- Random Stocks done -----')
 
 

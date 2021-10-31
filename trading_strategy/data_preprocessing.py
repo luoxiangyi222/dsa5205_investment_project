@@ -37,6 +37,7 @@ def RFE(stock):
     Y_arr = np.array(Y_df)[:-1]
 
     lr = LinearRegression(normalize=True)
+    dt = DecisionTreeRegressor()
 
     rfecv = RFECV(estimator=lr,
                   step=1,
@@ -205,7 +206,7 @@ if __name__ == "__main__":
 
     rfe_result = RFE_voting()
 
-    preprocessing('mix', 'portfolio_data/mix')
+    # preprocessing('mix', 'portfolio_data/mix')
     # preprocessing('momentum', 'portfolio_data/momentum')
     # preprocessing('contrarian', 'portfolio_data/contrarian')
 
