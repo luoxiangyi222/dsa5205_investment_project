@@ -12,10 +12,56 @@ import csv
 import itertools
 import quandl
 from dateutil.relativedelta import relativedelta
+import scipy.stats as stats
+from matplotlib import pyplot as plt
+
 
 #######################################################
-# Stock Selection based on P/E and P/B
+# Stock Selection based on skewness
 #######################################################
+# Normalize all ta indicators using median & MAD
+
+
+def skewness_and_kurtosis(stock_list):
+    mix_tickers = stock_list
+
+    c = pd.read_csv('./data/stock_pool_data.csv', index_col=0).dropna()
+
+    tickerList = mix_tickers
+    multiData = c[c['ticker'].isin(mix_tickers)]
+    df = multiData.copy()
+    data_raw = df[['ticker', 'adjclose']]
+
+    data = data_raw.pivot_table(index=data_raw.index, columns='ticker', values=['adjclose'])
+    # flatten columns multi-index, `date` will become the dataframe index
+    data.columns = [col[1] for col in data.columns.values]
+    returns_portfolio = data.pct_change().fillna(method='bfill')
+
+    skewness = {}
+    kurtosis = {}
+
+    for i in range(len(tickerList)):
+        skewness[tickerList[i]] = stats.skew(returns_portfolio[tickerList[i]])
+        kurtosis[tickerList[i]] = stats.kurtosis(returns_portfolio[tickerList[i]], fisher=False)
+
+        skewness = {k: v for k, v in sorted(skewness.items(), key=lambda item: item[1], reverse=True)}
+        kurtosis = {k: v for k, v in sorted(kurtosis.items(), key=lambda item: item[1])}
+    return skewness, kurtosis
+
+
+def filterTheDict(dictObj, callback):
+    newDict = dict()
+    # Iterate over all the items in dictionary
+    for (key, value) in dictObj.items():
+        # Check if item satisfies the given condition then add to new dict
+        if callback((key, value)):
+            newDict[key] = value
+    return newDict
+
+
+######################################################
+# Stock Selection based on P/E and P/B
+######################################################
 
 
 def stock_selection(ta_data):
@@ -35,18 +81,47 @@ def stock_selection(ta_data):
                                   (normalized_df['Earnings to Price'] < 3) & (normalized_df['Earnings to Price'] > -3)]
     normalized_df['sum'] = normalized_df.sum(axis=1)
     normalized_df = normalized_df.sort_values(by=['sum'], ascending=False)
+    # p = 0.2
+    # if mix:
+    #     p = 0.1
     return normalized_df.index[:10].tolist()
 
 
+# PE and PB data for 3 possible stock pools
 c = pd.read_csv('./data/contrarian_stock_data.csv', index_col=0).dropna()
 momentum = pd.read_csv('./data/momentum_stock_data.csv', index_col=0).dropna()
 # possible stocks from both momentum and contrarian
 mix = momentum.append(c)
 mix = mix[~mix.index.duplicated(keep='first')]
 # save the portfolio following all three strategies
-contrarian_portfolio = stock_selection(c)
-momentum_portfolio = stock_selection(momentum)
-mix_portfolio = stock_selection(mix)
+
+# calculate kurtosis for stocks in each stock pool
+contrarian_kurtosis = skewness_and_kurtosis(c.index.tolist())[1]
+momentum_kurtosis = skewness_and_kurtosis(momentum.index.tolist())[1]
+mix_kurtosis = skewness_and_kurtosis(mix.index.tolist())[1]
+
+df_c = pd.DataFrame.from_dict(contrarian_kurtosis, orient='index', columns=['kurtosis'])
+margin = 1.5*(df_c.describe().loc['75%'][0] - df_c.describe().loc['25%'][0]) + df_c.describe().loc['75%'][0]
+stock_pool_c = filterTheDict(contrarian_kurtosis, lambda elem: elem[1] <= margin)
+df_m = pd.DataFrame.from_dict(momentum_kurtosis, orient='index', columns=['kurtosis'])
+margin = 1.5*(df_m.describe().loc['75%'][0] - df_m.describe().loc['25%'][0]) + df_m.describe().loc['75%'][0]
+stock_pool_m = filterTheDict(momentum_kurtosis, lambda elem: elem[1] <= margin)
+df_mix = pd.DataFrame.from_dict(mix_kurtosis, orient='index', columns=['kurtosis'])
+margin = 1.5*(df_mix.describe().loc['75%'][0] - df_mix.describe().loc['25%'][0]) + df_mix.describe().loc['75%'][0]
+stock_pool_mix = filterTheDict(mix_kurtosis, lambda elem: elem[1] <= margin)
+fig, axs = plt.subplots(3, 2)
+fig.suptitle('Kurtosis Distribution')
+df_c.hist(column='kurtosis', bins=25, ax=axs[0, 0], color='#86bf91')
+df_c.boxplot(column='kurtosis', ax=axs[0, 1], color='#86bf91')
+df_m.hist(column='kurtosis', bins=25, ax=axs[1, 0], color='coral')
+df_m.boxplot(column='kurtosis', ax=axs[1, 1], color='coral')
+df_mix.hist(column='kurtosis', bins=25, ax=axs[2, 0], color='skyblue')
+df_mix.boxplot(column='kurtosis', ax=axs[2, 1], color='skyblue')
+
+# filter out stocks with high kurtosis and then perform stock selection
+contrarian_portfolio = stock_selection(c.loc[list(stock_pool_c.keys())])
+momentum_portfolio = stock_selection(momentum.loc[list(stock_pool_m.keys())])
+mix_portfolio = stock_selection(mix.loc[list(stock_pool_mix.keys())])
 
 with open('./data/contrarian_portfolio.txt', 'w') as f:
     for item in contrarian_portfolio:
@@ -60,6 +135,27 @@ with open('./data/mixed_portfolio.txt', 'w') as f:
     for item in mix_portfolio:
         f.write("%s\n" % item)
 
+# contrarian_kurtosis = skewness_and_kurtosis('./data/contrarian_portfolio.txt')[1]
+# momentum_kurtosis = skewness_and_kurtosis('./data/momentum_portfolio.txt')[1]
+# mix_kurtosis = skewness_and_kurtosis('./data/mixed_portfolio.txt')[1]
+#
+# contrarian_portfolio = list(contrarian_kurtosis.keys())[:10]
+# momentum_portfolio = list(momentum_kurtosis.keys())[:10]
+# mix_portfolio = list(mix_kurtosis.keys())[:10]
+#
+# with open('./data/contrarian_portfolio.txt', 'w') as f:
+#     for item in contrarian_portfolio:
+#         f.write("%s\n" % item)
+#
+# with open('./data/momentum_portfolio.txt', 'w') as f:
+#     for item in momentum_portfolio:
+#         f.write("%s\n" % item)
+#
+# with open('./data/mixed_portfolio.txt', 'w') as f:
+#     for item in mix_portfolio:
+#         f.write("%s\n" % item)
+
+
 #######################################################
 # Diversification of Potential Portfolios
 # definition of normalized portfolio covariance of
@@ -70,7 +166,7 @@ with open('./data/mixed_portfolio.txt', 'w') as f:
 #######################################################
 # calculate normalized portfolio covariance
 # less is better
-combined = pd.read_csv('./data/stock_pool_data.csv', index_col= 0)
+combined = pd.read_csv('./data/stock_pool_data.csv', index_col=0)
 combined['time'] = pd.Index(pd.to_datetime(combined.index))
 combined = combined.set_index('time')
 
@@ -85,31 +181,24 @@ daily_stock_return = data.pct_change()
 
 def normalized_portfolio_covariance(portfolio, period):
     month = relativedelta(months=period)
-    start = datetime(2020, 7, 31) - month
+    start = datetime(2021, 7, 31) - month
     daily = daily_stock_return[daily_stock_return.index > start]
     data = daily[portfolio]
     correlation_matrix = data.corr()
-    avg_corr = sum(sum(np.triu(correlation_matrix.values)))/sum(range(len(portfolio)+1))
-    return 1/len(portfolio) + avg_corr * (len(portfolio)-1)/len(portfolio)
+    avg_corr = sum(sum(np.triu(correlation_matrix.values))) / sum(range(len(portfolio) + 1))
+    return 1 / len(portfolio) + avg_corr * (len(portfolio) - 1) / len(portfolio)
 
 
 normalized_cov_time = pd.DataFrame()
-duration = [3, 6, 12, 18]
+duration = [3, 6, 9, 12, 18]
 for n in duration:
-    # print("-" * 80)
-    # print("normalized portfolio covariance for contrarian: {} for using {} month past data"
-    #       .format(normalized_portfolio_covariance(contrarian_portfolio, n), n))
-    # print("normalized portfolio covariance for momentum: {} for using {} month past data"
-    #       .format(normalized_portfolio_covariance(momentum_portfolio, n), n))
-    # print("normalized portfolio covariance for mixed: {} for using {} month past data"
-    #       .format(normalized_portfolio_covariance(mix_portfolio, n), n))
     temp = [normalized_portfolio_covariance(contrarian_portfolio, n),
             normalized_portfolio_covariance(momentum_portfolio, n),
             normalized_portfolio_covariance(mix_portfolio, n)]
     df = pd.DataFrame(temp, index=['contrarian', 'momentum', 'mix'], columns=['{} month'.format(n)])
     normalized_cov_time = normalized_cov_time.append(df.T, ignore_index=False)
 print(normalized_cov_time)
-from matplotlib import pyplot as plt
+
 plt.rcParams["figure.figsize"] = [10, 6]
 normalized_cov_time.plot(kind="bar", rot=0, color=['lightsalmon', 'coral', 'peru'])
 plt.title("Normalized Portfolio Covariance calculated across Various Time Scale")

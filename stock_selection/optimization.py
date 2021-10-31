@@ -197,7 +197,7 @@ def display_calculated_ef_with_random(mean_returns, cov_matrix, num_portfolios, 
     plt.colorbar()
     plt.scatter(sdp, rp, marker='*', color='r', s=500, label='Maximum Sharpe ratio')
     plt.scatter(sdp_min, rp_min, marker='*', color='g', s=500, label='Minimum volatility')
-    target = np.linspace(rp_min, 0.06, 50)
+    target = np.linspace(rp_min, 0.038, 50)
     efficient_portfolios = efficient_frontier(mean_returns, cov_matrix, target)
     plt.plot([p['fun'] for p in efficient_portfolios], target, linestyle='-.', color='black',
              label='efficient frontier')

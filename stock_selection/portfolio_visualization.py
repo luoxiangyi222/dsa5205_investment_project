@@ -80,7 +80,7 @@ def cum_return_calculation(tickers, weights):
 def random_10_stocks(k):
     cum_sum = 0
     total_sum = 0
-    for i in range(k):
+    for j in range(k):
         ind = random.sample(range(len(stock_pool)), 10)
         portfolio = [stock_pool[i] for i in ind]
         w = [0.1] * 10
