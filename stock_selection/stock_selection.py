@@ -14,7 +14,9 @@ import quandl
 from dateutil.relativedelta import relativedelta
 import scipy.stats as stats
 from matplotlib import pyplot as plt
-
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
+import seaborn as sns
 
 #######################################################
 # Stock Selection based on skewness
@@ -25,7 +27,7 @@ from matplotlib import pyplot as plt
 def skewness_and_kurtosis(stock_list):
     mix_tickers = stock_list
 
-    c = pd.read_csv('./data/stock_pool_data.csv', index_col=0).dropna()
+    c = pd.read_csv('/Users/huaerli/Desktop/2021 AYS1/DSA5205/group-project-local/code/data/stock_pool_data.csv', index_col=0).dropna()
 
     tickerList = mix_tickers
     multiData = c[c['ticker'].isin(mix_tickers)]
@@ -109,15 +111,48 @@ stock_pool_m = filterTheDict(momentum_kurtosis, lambda elem: elem[1] <= margin)
 df_mix = pd.DataFrame.from_dict(mix_kurtosis, orient='index', columns=['kurtosis'])
 margin = 1.5*(df_mix.describe().loc['75%'][0] - df_mix.describe().loc['25%'][0]) + df_mix.describe().loc['75%'][0]
 stock_pool_mix = filterTheDict(mix_kurtosis, lambda elem: elem[1] <= margin)
-fig, axs = plt.subplots(3, 2)
+fig, axs = plt.subplots(3, 2, figsize=(8, 6))
 fig.suptitle('Kurtosis Distribution')
-df_c.hist(column='kurtosis', bins=25, ax=axs[0, 0], color='#86bf91')
-df_c.boxplot(column='kurtosis', ax=axs[0, 1], color='#86bf91')
-df_m.hist(column='kurtosis', bins=25, ax=axs[1, 0], color='coral')
-df_m.boxplot(column='kurtosis', ax=axs[1, 1], color='coral')
-df_mix.hist(column='kurtosis', bins=25, ax=axs[2, 0], color='skyblue')
-df_mix.boxplot(column='kurtosis', ax=axs[2, 1], color='skyblue')
 
+colors = ['#86bf91']
+# Set your custom color palette
+sns.set_palette(sns.color_palette(colors))
+
+df_c.hist(column='kurtosis', bins=25, ax=axs[0, 0], color='#86bf91')
+# df_c.boxplot(column='kurtosis', ax=axs[0, 1], color='#86bf91')
+sns.boxplot(y='kurtosis',
+                 data=df_c,
+                 width=0.5,
+                ax= axs[0,1])
+colors = ['coral']
+# Set your custom color palette
+sns.set_palette(sns.color_palette(colors))
+df_m.hist(column='kurtosis', bins=25, ax=axs[1, 0], color='coral')
+# df_m.boxplot(column='kurtosis', ax=axs[1, 1], color='coral')
+sns.boxplot(y='kurtosis',
+                 data=df_m,
+                 width=0.5, ax= axs[1,1])
+colors = ['skyblue']
+# Set your custom color palette
+sns.set_palette(sns.color_palette(colors))
+df_mix.hist(column='kurtosis', bins=25, ax=axs[2, 0], color='skyblue')
+sns.boxplot(y='kurtosis',
+                 data=df_mix,
+                 width=0.5, ax= axs[2,1])
+
+legend_elements = [Line2D([0], [0], color='#86bf91', lw=2, label='Contrarian'),
+                   Line2D([0], [0], color='coral', lw=2, label='Momentum'),
+                   Line2D([0], [0], color='skyblue', lw=2, label='Mix')]
+
+
+
+axs[2,0].legend(handles=legend_elements,loc='upper center', bbox_to_anchor=(0.5, -0.15),
+          fancybox=True, shadow=True, ncol=5)
+
+# fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(1, 0.5))
+
+plt.savefig('./data/kurtosis_distribution.jpg')
+plt.show()
 # filter out stocks with high kurtosis and then perform stock selection
 contrarian_portfolio = stock_selection(c.loc[list(stock_pool_c.keys())])
 momentum_portfolio = stock_selection(momentum.loc[list(stock_pool_m.keys())])
@@ -166,7 +201,7 @@ with open('./data/mixed_portfolio.txt', 'w') as f:
 #######################################################
 # calculate normalized portfolio covariance
 # less is better
-combined = pd.read_csv('./data/stock_pool_data.csv', index_col=0)
+combined = pd.read_csv('/Users/huaerli/Desktop/2021 AYS1/DSA5205/group-project-local/code/data/stock_pool_data.csv', index_col=0)
 combined['time'] = pd.Index(pd.to_datetime(combined.index))
 combined = combined.set_index('time')
 
